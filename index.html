@@ -2689,6 +2689,201 @@ function checkStaleProjects() {
 // Check for stale projects every hour
 setInterval(checkStaleProjects, 60 * 60 * 1000);
 
+
+// ── BUDGET SYNC ──────────────────────────────────────────────────────────
+const BUDGET_SYNC_CONFIG = {
+  porsche: {
+    label: "Porsche (Prestige + West Island)",
+    sourceId: "1YsKZFYTKG5Lt4nWS0iaaM0Vd28acRWWABTCPWL3pjb4",
+    destId:   "1EgRWjgl0Ph4wAFaC0d3E9UyK8XVyUhC5",
+    sheets: [
+      { name: "Porsche Prestige",    destName: "Porsche Prestige" },
+      { name: "Porsche West Island", destName: "Porsche WI"       }
+    ]
+  }
+  // Add more dealership groups here as needed
+};
+
+const MONTH_LABELS = {
+  1:"Jan-26",2:"Feb-26",3:"Mar-26",4:"Apr-26",5:"May-26",6:"Jun-26",
+  7:"Jul-26",8:"Aug-26",9:"Sep-26",10:"Oct-26",11:"Nov-26",12:"Dec-26"
+};
+const MONTH_NAMES_LONG = {
+  1:"January",2:"February",3:"March",4:"April",5:"May",6:"June",
+  7:"July",8:"August",9:"September",10:"October",11:"November",12:"December"
+};
+
+function openBudgetSyncModal() {
+  const existing = document.getElementById("budget-sync-overlay");
+  if (existing) existing.remove();
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const months = Object.values(MONTH_NAMES_LONG);
+  const monthOptions = months.map((m, i) =>
+    `<option value="${i+1}" ${i+1 === now.getMonth()+1 ? "selected" : ""}>${m}</option>`
+  ).join("");
+
+  const overlay = document.createElement("div");
+  overlay.id = "budget-sync-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(8px)";
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.15);width:100%;max-width:460px;display:flex;flex-direction:column;border:1px solid rgba(0,0,0,.08);overflow:hidden">
+      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between;position:relative">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#1a8f3c,transparent)"></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:38px;height:38px;background:rgba(52,199,89,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#1a8f3c;font-size:18px"><i class="ti ti-currency-dollar"></i></div>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:#1a1a1a;letter-spacing:-0.02em">Sync Budget to Media Sheet</div>
+            <div style="font-size:12px;color:#aeaeb2">Select dealership group and month</div>
+          </div>
+        </div>
+        <button onclick="document.getElementById('budget-sync-overlay').remove()" style="background:rgba(0,0,0,.05);border:none;border-radius:999px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6e6e73;font-size:15px"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:1.25rem 1.5rem">
+
+        <!-- Month selector -->
+        <div style="margin-bottom:1rem">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aeaeb2;margin-bottom:6px">Month</div>
+          <select id="sync-month" style="width:100%;padding:12px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;font-size:14px;font-weight:600;color:#1a1a1a;background:#fff;outline:none;cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2 4l4 4 4-4%22 fill=%22none%22 stroke=%22%23aeaeb2%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center">
+            ${monthOptions}
+          </select>
+        </div>
+
+        <!-- Dealership group selector -->
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aeaeb2;margin-bottom:10px">Dealership Group</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:1.25rem">
+
+          <button onclick="runBudgetSync('porsche')" style="display:flex;align-items:center;gap:12px;padding:.85rem 1rem;background:rgba(0,0,0,.02);border:1.5px solid rgba(0,0,0,.08);border-radius:14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:all .15s" onmouseover="this.style.borderColor='#1a8f3c';this.style.background='#fff'" onmouseout="this.style.borderColor='rgba(0,0,0,.08)';this.style.background='rgba(0,0,0,.02)'">
+            <div style="width:40px;height:40px;border-radius:12px;background:rgba(52,199,89,.1);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏎️</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;color:#1a1a1a">Porsche</div>
+              <div style="font-size:11px;color:#aeaeb2;margin-top:1px">Porsche Prestige + Porsche West Island</div>
+            </div>
+            <i class="ti ti-chevron-right" style="color:#aeaeb2;font-size:14px;flex-shrink:0"></i>
+          </button>
+
+          <!-- More groups to be added -->
+          <div style="display:flex;align-items:center;gap:12px;padding:.85rem 1rem;background:rgba(0,0,0,.02);border:1.5px solid rgba(0,0,0,.06);border-radius:14px;opacity:.4;cursor:not-allowed">
+            <div style="width:40px;height:40px;border-radius:12px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🚗</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;color:#6e6e73;display:flex;align-items:center;gap:7px">More dealerships <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#aeaeb2;background:#e5e5ea;padding:2px 8px;border-radius:999px">Coming soon</span></div>
+              <div style="font-size:11px;color:#c7c7cc;margin-top:1px">Audi, Lexus, JLR, Infiniti...</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:rgba(52,199,89,.05);border:1px solid rgba(52,199,89,.2);border-radius:12px;padding:.85rem 1rem;font-size:12px;color:#1a8f3c;line-height:1.6">
+          Reads Social Ads, P7 & Google Adwords from the spending file and writes them directly into the correct rows of your media budget sheet.
+        </div>
+      </div>
+      <div style="padding:.9rem 1.5rem;border-top:1px solid rgba(0,0,0,.06);display:flex;justify-content:flex-end">
+        <button onclick="document.getElementById('budget-sync-overlay').remove()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:980px;border:1.5px solid rgba(0,0,0,.1);background:#fff;color:#6e6e73;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function runBudgetSync(groupKey) {
+  const config = BUDGET_SYNC_CONFIG[groupKey];
+  if (!config) return;
+
+  const monthNum = parseInt(document.getElementById("sync-month").value);
+  const monthLabel = MONTH_LABELS[monthNum];
+  const monthLong  = MONTH_NAMES_LONG[monthNum];
+
+  // Close modal and show loading toast
+  document.getElementById("budget-sync-overlay").remove();
+  showToast("Syncing " + config.label + " — " + monthLong + "...", "");
+
+  if (demoMode || !apiUrl) {
+    showToast("Connect to Google Sheets to use Budget Sync", "error");
+    return;
+  }
+
+  const cbName = "ggsync_" + Date.now();
+  const script = document.createElement("script");
+  let done = false;
+
+  const timer = setTimeout(() => {
+    if (!done) { done = true; cleanup(); showBudgetSyncResult(null, "Timed out — check Apps Script logs"); }
+  }, 30000);
+
+  window[cbName] = (data) => {
+    if (!done) {
+      done = true; clearTimeout(timer); cleanup();
+      if (data && data.ok) {
+        showBudgetSyncResult(data.results, null);
+      } else {
+        showBudgetSyncResult(null, data ? data.error : "Unknown error");
+      }
+    }
+  };
+
+  script.onerror = () => {
+    if (!done) { done = true; clearTimeout(timer); cleanup(); showBudgetSyncResult(null, "Network error — check Apps Script URL"); }
+  };
+
+  function cleanup() { delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); }
+
+  const params = new URLSearchParams({
+    callback:  cbName,
+    action:    "syncBudget",
+    sourceId:  config.sourceId,
+    destId:    config.destId,
+    month:     monthLabel,
+    sheets:    JSON.stringify(config.sheets),
+    t:         Date.now()
+  });
+
+  const sep = apiUrl.includes("?") ? "&" : "?";
+  script.src = apiUrl + sep + params.toString();
+  document.head.appendChild(script);
+}
+
+function showBudgetSyncResult(results, errorMsg) {
+  const existing = document.getElementById("budget-result-overlay");
+  if (existing) existing.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "budget-result-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(8px)";
+
+  const isError = !!errorMsg;
+  const icon  = isError ? "❌" : "✅";
+  const color = isError ? "#ff3b30" : "#1a8f3c";
+  const bgCol = isError ? "rgba(255,59,48,.06)" : "rgba(52,199,89,.06)";
+  const brdCol= isError ? "rgba(255,59,48,.2)"  : "rgba(52,199,89,.2)";
+
+  let content = "";
+  if (isError) {
+    content = `<div style="font-size:13px;color:#ff3b30;margin-bottom:1rem">${errorMsg}</div>`;
+  } else if (results) {
+    content = results.map(r => `
+      <div style="background:${bgCol};border:1px solid ${brdCol};border-radius:12px;padding:.85rem 1rem;margin-bottom:8px;text-align:left">
+        <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:6px">${r.name}</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="font-size:12px;color:#6e6e73">📘 Facebook: <strong style="color:#1a1a1a">$${r.social.toLocaleString()}</strong></div>
+          <div style="font-size:12px;color:#6e6e73">📗 P7: <strong style="color:#1a1a1a">$${r.p7.toLocaleString()}</strong></div>
+          <div style="font-size:12px;color:#6e6e73">📙 Google: <strong style="color:#1a1a1a">$${r.google.toLocaleString()}</strong></div>
+        </div>
+      </div>`).join("");
+  }
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px;padding:2rem 1.75rem 1.75rem;max-width:420px;width:100%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.18);position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,transparent,${color},transparent)"></div>
+      <div style="font-size:40px;margin-bottom:.75rem">${icon}</div>
+      <div style="font-size:18px;font-weight:700;color:#1a1a1a;letter-spacing:-0.02em;margin-bottom:.5rem">${isError ? "Sync Failed" : "Budget Synced!"}</div>
+      <div style="font-size:13px;color:#6e6e73;margin-bottom:1.25rem">${isError ? "Something went wrong:" : "The following values were written to your media sheet:"}</div>
+      ${content}
+      <button onclick="document.getElementById('budget-result-overlay').remove()" style="width:100%;padding:12px;background:linear-gradient(135deg,#1a8f3c,#30d158);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:.5rem">Done</button>
+    </div>`;
+
+  document.body.appendChild(overlay);
+}
+
 </script>
 
 
@@ -2805,6 +3000,15 @@ setInterval(checkStaleProjects, 60 * 60 * 1000);
         <div class="mgmt-action-text">
           <div class="mgmt-action-title">Generate Monthly Reports</div>
           <div class="mgmt-action-desc">Create Gmail draft reports for all dealerships with Google Drive links</div>
+        </div>
+        <i class="ti ti-chevron-right mgmt-action-arrow"></i>
+      </button>
+
+      <button class="mgmt-action" onclick="closeMgmt();openBudgetSyncModal()">
+        <div class="mgmt-action-icon" style="background:rgba(52,199,89,.1);color:#1a8f3c"><i class="ti ti-currency-dollar"></i></div>
+        <div class="mgmt-action-text">
+          <div class="mgmt-action-title">Sync Budget to Media Sheet</div>
+          <div class="mgmt-action-desc">Pull Social Ads, P7 & Google budgets from spending files into the monthly media sheet</div>
         </div>
         <i class="ti ti-chevron-right mgmt-action-arrow"></i>
       </button>
