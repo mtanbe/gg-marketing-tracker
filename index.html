@@ -1256,8 +1256,18 @@ function apiPost(payload) {
 
     if (payload.action === "delete") {
       src += "&action=delete&id=" + encodeURIComponent(payload.project.id);
+    } else if (payload.action === "deleteSocial") {
+      src += "&action=deleteSocial&id=" + encodeURIComponent(payload.id);
+    } else if (payload.action === "saveSocial") {
+      src += "&action=saveSocial&p=" + encodeURIComponent(payload.p);
+    } else if (payload.action === "archiveProjects") {
+      src += "&action=archiveProjects&ids=" + encodeURIComponent(payload.ids) + "&rows=" + encodeURIComponent(payload.rows);
+    } else if (payload.action === "push") {
+      src += "&action=push&msg=" + encodeURIComponent(payload.msg || "");
+    } else if (payload.action === "draft") {
+      src += "&action=draft&to=" + encodeURIComponent(payload.to||"") + "&cc=" + encodeURIComponent(payload.cc||"") + "&subject=" + encodeURIComponent(payload.subject||"") + "&body=" + encodeURIComponent(payload.body||"");
     } else {
-      // add or update — send project as JSON in param p
+      // add or update project
       src += "&action=" + payload.action + "&p=" + encodeURIComponent(JSON.stringify(payload.project));
     }
 
