@@ -203,6 +203,12 @@ select:hover { background-color:#fff; border-color:rgba(0,0,0,.15); }
 .notes-block { background:rgba(255,255,255,.7); border:1px solid rgba(0,0,0,.06); border-left:3px solid var(--red); border-radius:10px; padding:10px 14px; font-size:13px; color:var(--text2); line-height:1.6; margin-bottom:14px; }
 .action-row { display:flex; gap:8px; flex-wrap:wrap; }
 
+.multi-chip-options { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.multi-chip-options label { display:flex; align-items:center; gap:5px; padding:5px 10px; border-radius:980px; border:1.5px solid rgba(0,0,0,.1); font-size:12px; font-weight:500; cursor:pointer; background:#fff; transition:all .15s; user-select:none; }
+.multi-chip-options label:hover { border-color:#A51C30; color:#A51C30; }
+.multi-chip-options input[type=checkbox] { display:none; }
+.multi-chip-options label.selected { background:#A51C30; color:#fff; border-color:#A51C30; }
+
 /* ── MODAL ── */
 .overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index:200; padding:1rem; backdrop-filter:blur(8px); }
 .modal { background:rgba(255,255,255,.95); backdrop-filter:blur(32px); -webkit-backdrop-filter:blur(32px); border:1px solid rgba(255,255,255,.9); border-radius:var(--radius-xl); padding:2rem; width:100%; max-width:580px; max-height:94vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
@@ -947,23 +953,21 @@ function doPost(e) {
     </div>
     <div class="form-2col">
       <div class="form-row">
-        <label>Graphic designer</label>
-        <select id="f-gd2">
-          <option value="">— unassigned —</option>
-          <option>Karam Merjanian</option>
-          <option>Mark Doummar</option>
-          <option>Carlo Gabriel Marquez</option>
-          <option>George Moubayed</option>
-          <option>Jaky Isaac</option>
-        </select>
+        <label>Graphic designer(s)</label>
+        <div class="multi-chip-options" id="gd-options">
+          <label><input type="checkbox" value="Karam Merjanian"> Karam Merjanian</label>
+          <label><input type="checkbox" value="Mark Doummar"> Mark Doummar</label>
+          <label><input type="checkbox" value="Carlo Gabriel Marquez"> Carlo Gabriel Marquez</label>
+          <label><input type="checkbox" value="George Moubayed"> George Moubayed</label>
+          <label><input type="checkbox" value="Jaky Isaac"> Jaky Isaac</label>
+        </div>
       </div>
       <div class="form-row">
-        <label>Copywriter</label>
-        <select id="f-cw">
-          <option value="">— unassigned —</option>
-          <option>Shems Abdelkefi</option>
-          <option>Claudia Al Shemali</option>
-        </select>
+        <label>Copywriter(s)</label>
+        <div class="multi-chip-options" id="cw-options">
+          <label><input type="checkbox" value="Shems Abdelkefi"> Shems Abdelkefi</label>
+          <label><input type="checkbox" value="Claudia Al Shemali"> Claudia Al Shemali</label>
+        </div>
       </div>
     </div>
     <div class="form-2col">
@@ -997,6 +1001,42 @@ const ACCOUNTS = {
 const STAGES = ["Brief received","In copywriting","In design","In review","Approved","Online","On hold"];
 const STAGE_PCT = {"Brief received":10,"In copywriting":28,"In design":48,"In review":68,"Approved":88,"Online":100,"On hold":8};
 const STAGE_BADGE = {"Brief received":"b-brief","In copywriting":"b-copy","In design":"b-design","In review":"b-review","Approved":"b-approved","Online":"b-online","On hold":"b-hold"};
+
+// ── MULTI-CHIP HELPERS ──────────────────────────────────────────────────────
+function initChips(optionsId) {
+  const container = document.getElementById(optionsId);
+  if (!container) return;
+  container.querySelectorAll("label").forEach(lbl => {
+    const newLbl = lbl.cloneNode(true);
+    lbl.parentNode.replaceChild(newLbl, lbl);
+    newLbl.addEventListener("click", function(e) {
+      e.preventDefault();
+      const cb = this.querySelector("input");
+      cb.checked = !cb.checked;
+      this.classList.toggle("selected", cb.checked);
+    });
+  });
+}
+function getChipValues(optionsId) {
+  const container = document.getElementById(optionsId);
+  if (!container) return "";
+  const vals = [];
+  container.querySelectorAll("input:checked").forEach(cb => vals.push(cb.value));
+  return vals.join(", ");
+}
+function setChipValues(optionsId, valueStr) {
+  const container = document.getElementById(optionsId);
+  if (!container) return;
+  const vals = (valueStr || "").split(",").map(v => v.trim()).filter(Boolean);
+  container.querySelectorAll("label").forEach(lbl => {
+    const cb = lbl.querySelector("input");
+    const selected = vals.includes(cb.value);
+    cb.checked = selected;
+    lbl.classList.toggle("selected", selected);
+  });
+}
+function clearChips(optionsId) { setChipValues(optionsId, ""); }
+// ─────────────────────────────────────────────────────────────────────────────
 
 let projects = [], editId = null, expanded = {};
 let apiUrl = localStorage.getItem("gg_api_url") || "";
@@ -1072,6 +1112,8 @@ function startApp() {
     setTimeout(checkStaleProjects, 5000);
   } else {
     fetchProjects();
+    fetchArchive();
+    loadSocialPosts();
     let refreshInterval = setInterval(fetchProjects, 30000);
     window._resetRefresh = function() {
       clearInterval(refreshInterval);
@@ -1099,6 +1141,7 @@ function fetchProjects() {
     (data) => {
       if (data && data.ok && Date.now() - lastWrite >= WRITE_COOLDOWN) {
         projects = Array.isArray(data) ? data : (data.rows || []);
+        autoArchiveOnlineProjects();
         renderAll();
       }
       setSyncing(false);
@@ -1106,6 +1149,79 @@ function fetchProjects() {
     () => { showToast("Sync error — could not reach Google Sheets", "error"); setSyncing(false); }
   );
 }
+
+// ── ARCHIVE SYSTEM ──────────────────────────────────────────────────────────
+let archivedProjects = [];
+
+function getProjectYM(p) {
+  if (!p.onlineDate || p.onlineDate === "" || p.onlineDate === "undefined") return null;
+  try {
+    const d = new Date(p.onlineDate);
+    if (isNaN(d)) return null;
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  } catch(e) { return null; }
+}
+
+function autoArchiveOnlineProjects() {
+  const now   = new Date();
+  const curYM = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+  const toArchive = projects.filter(p => {
+    if (p.stage !== "Online") return false;
+    const ym = getProjectYM(p);
+    if (!ym) return true;
+    return ym < curYM;
+  });
+  if (toArchive.length === 0) return;
+  _doArchive(toArchive);
+  showToast(`✅ ${toArchive.length} completed project${toArchive.length > 1 ? "s" : ""} from last month archived`, "");
+}
+
+function manualArchive() {
+  const now   = new Date();
+  const curYM = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+  const toArchive = projects.filter(p => {
+    if (p.stage !== "Online") return false;
+    const ym = getProjectYM(p);
+    if (!ym) return true;
+    return ym < curYM;
+  });
+  if (toArchive.length === 0) {
+    showToast("No completed projects from previous months to archive", "");
+    return;
+  }
+  if (!confirm("Archive " + toArchive.length + " Online project" + (toArchive.length > 1 ? "s" : "") + " from previous months?\nThey will be moved to the Archive sheet and included in performance stats.")) return;
+  _doArchive(toArchive);
+  renderAll();
+  showToast("✅ " + toArchive.length + " project" + (toArchive.length > 1 ? "s" : "") + " archived", "");
+}
+
+function _doArchive(toArchive) {
+  archivedProjects = [...archivedProjects, ...toArchive];
+  const ids = new Set(toArchive.map(p => p.id));
+  projects = projects.filter(p => !ids.has(p.id));
+  if (!demoMode) {
+    apiPost({ action: "archiveProjects", ids: JSON.stringify(toArchive.map(p => p.id)), rows: JSON.stringify(toArchive) });
+  }
+}
+
+function fetchArchive() {
+  if (demoMode) return;
+  const cbName = "ggarchive_" + Date.now();
+  const script = document.createElement("script");
+  window[cbName] = (data) => {
+    delete window[cbName];
+    if (script.parentNode) script.parentNode.removeChild(script);
+    if (data && data.ok) archivedProjects = data.rows || [];
+  };
+  const sep = apiUrl.includes("?") ? "&" : "?";
+  script.src = apiUrl + sep + new URLSearchParams({ callback: cbName, action: "readArchive", t: Date.now() });
+  document.head.appendChild(script);
+}
+
+function allProjectsIncludingArchived() {
+  return [...projects, ...archivedProjects];
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function saveLocal() { if (demoMode) localStorage.setItem("gg_local", JSON.stringify(projects)); }
 
@@ -1246,12 +1362,23 @@ function toggleExp(id) { expanded[id] = !expanded[id]; renderProjects(); }
 // ── MODAL ─────────────────────────────────────────────────────────────
 function updateAccountList(preSelected) {
   const am = document.getElementById("f-am2").value;
-  const accounts = ACCOUNTS[am] || [];
+  const myAccounts = ACCOUNTS[am] || [];
+  const allAccounts = [...new Set(Object.values(ACCOUNTS).flat())].sort();
+  const otherAccounts = allAccounts.filter(a => !myAccounts.includes(a));
   const picker = document.getElementById("f-account-picker");
   const selected = preSelected || [];
-  picker.innerHTML = accounts.map(a =>
-    `<span class="d-chip${selected.includes(a) ? ' selected' : ''}" onclick="toggleDealership(this,'${a.replace(/'/g, "\'")}')">${a}</span>`
-  ).join("");
+
+  function chip(a) {
+    const esc = a.replace(/'/g, "\'");
+    return `<span class="d-chip${selected.includes(a) ? ' selected' : ''}" onclick="toggleDealership(this,'${esc}')">${a}</span>`;
+  }
+
+  let out = myAccounts.map(chip).join("");
+  out += chip("Groupe Gabriel");
+  out += `<span style="display:block;width:100%;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aeaeb2;padding:6px 2px 2px;pointer-events:none;">Other dealerships</span>`;
+  out += otherAccounts.map(chip).join("");
+
+  picker.innerHTML = out;
   updateHiddenAccount();
 }
 
@@ -1270,14 +1397,15 @@ function getSelectedAccounts() {
 }
 
 function openNewModal() {
+  initChips("gd-options"); initChips("cw-options");
   editId = null;
   document.getElementById("modal-h").textContent = "New project";
   document.getElementById("modal-save").innerHTML = '<i class="ti ti-check"></i> Save project';
   document.getElementById("f-name").value = "";
   document.getElementById("f-notes").value = "";
   document.getElementById("f-stage2").value = "Brief received";
-  document.getElementById("f-gd2").value = "";
-  document.getElementById("f-cw").value = "";
+  clearChips("gd-options");
+  clearChips("cw-options");
   document.getElementById("f-start").value = today();
   document.getElementById("f-deadline").value = "";
   document.getElementById("f-am2").value = "Michel Tanbe";
@@ -1297,8 +1425,9 @@ function openEdit(id) {
   document.getElementById("f-name").value = p.name;
   document.getElementById("f-type").value = p.type || "Other";
   document.getElementById("f-stage2").value = p.stage;
-  document.getElementById("f-gd2").value = p.gd || "";
-  document.getElementById("f-cw").value = p.cw || "";
+  initChips("gd-options"); initChips("cw-options");
+  setChipValues("gd-options", p.gd || "");
+  setChipValues("cw-options", p.cw || "");
   document.getElementById("f-start").value = p.start || "";
   document.getElementById("f-deadline").value = p.deadline || "";
   document.getElementById("f-notes").value = p.notes || "";
@@ -1317,8 +1446,8 @@ async function saveProject() {
     account: document.getElementById("f-account").value,
     am: document.getElementById("f-am2").value,
     name, type: document.getElementById("f-type").value, stage,
-    gd: document.getElementById("f-gd2").value,
-    cw: document.getElementById("f-cw").value,
+    gd: getChipValues("gd-options"),
+    cw: getChipValues("cw-options"),
     start: document.getElementById("f-start").value,
     deadline: document.getElementById("f-deadline").value,
     notes: document.getElementById("f-notes").value,
@@ -1388,7 +1517,30 @@ window.addEventListener("DOMContentLoaded", function() {
   }, 2600);
 });
 
-// ── PERFORMANCE PANEL ────────────────────────────────────────────────
+// ── PERFORMANCE PANEL ──
+let perfMonth = "all";
+
+function getYM(dateStr) {
+  if (!dateStr || dateStr === "undefined" || dateStr === "") return null;
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d)) return null;
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
+  } catch(e) { return null; }
+}
+
+// Projects that BELONG to a month = createdAt in that month
+function filterByMonth(projs) {
+  if (perfMonth === "all") return projs;
+  return projs.filter(p => getYM(p.createdAt) === perfMonth);
+}
+
+// Projects completed IN a month = onlineDate in that month
+function filterCompletedInMonth(projs) {
+  if (perfMonth === "all") return projs.filter(p => p.stage === "Online");
+  return projs.filter(p => p.stage === "Online" && getYM(p.onlineDate) === perfMonth);
+}
+// ─────────────────────────────────────────────────────────────────────────────
 const DESIGNERS = ["Karam Merjanian","Mark Doummar","Carlo Gabriel Marquez","George Moubayed","Jaky Isaac"];
 const INITIALS = {"Karam Merjanian":"KM","Mark Doummar":"MD","Carlo Gabriel Marquez":"CG","George Moubayed":"GM","Jaky Isaac":"JI"};
 const AVATAR_COLORS = ["#A51C30","#1d4ed8","#0f766e","#7c3aed","#d97706"];
@@ -1431,12 +1583,53 @@ function renderPerf() {
   const body = document.getElementById("perf-body");
   const today_str = today();
 
+  // Build month selector from completed projects
+  const allCompleted = allProjectsIncludingArchived().filter(p => p.stage === "Online");
+  const months = [...new Set(allCompleted.map(p => {
+    if (!p.onlineDate) return null;
+    try { const d = new Date(p.onlineDate); if (isNaN(d)) return null; return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0"); } catch(e) { return null; }
+  }).filter(Boolean))].sort().reverse();
+  const mn = {"01":"Jan","02":"Feb","03":"Mar","04":"Apr","05":"May","06":"Jun","07":"Jul","08":"Aug","09":"Sep","10":"Oct","11":"Nov","12":"Dec"};
+  const mLabel = m => { const [y,mo] = m.split("-"); return (mn[mo]||mo) + " " + y; };
+  const monthOpts = [`<option value="all" ${perfMonth==="all"?"selected":""}>All time</option>`,
+    ...months.map(m => `<option value="${m}" ${perfMonth===m?"selected":""}>${mLabel(m)}</option>`)
+  ].join("");
+
+  // Inject month selector bar
+  let monthBar = document.getElementById("perf-month-bar");
+  if (!monthBar) {
+    monthBar = document.createElement("div");
+    monthBar.id = "perf-month-bar";
+    monthBar.style.cssText = "padding:10px 1.5rem;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;gap:10px;background:#fff;flex-shrink:0;";
+    const lbl = document.createElement("span");
+    lbl.style.cssText = "font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aeaeb2;white-space:nowrap";
+    lbl.textContent = "Period";
+    const sel = document.createElement("select");
+    sel.id = "perf-month-select";
+    sel.style.cssText = "flex:1;max-width:220px;padding:7px 30px 7px 12px;border:1.5px solid rgba(0,0,0,.1);border-radius:10px;font-size:13px;font-weight:600;color:#1a1a1a;background:#fff;outline:none;cursor:pointer;font-family:inherit;";
+    sel.addEventListener("change", function() { perfMonth = this.value; renderPerf(); });
+    monthBar.appendChild(lbl); monthBar.appendChild(sel);
+    const perfPanel = document.getElementById("perf-body").parentNode;
+    const tabs = perfPanel.querySelector(".perf-tabs");
+    if (tabs) tabs.after(monthBar); else perfPanel.insertBefore(monthBar, document.getElementById("perf-body"));
+  }
+  document.getElementById("perf-month-select").innerHTML = monthOpts;
+
   // Per-designer stats
   const stats = DESIGNERS.map((name, di) => {
-    const mine = projects.filter(p => p.gd === name);
-    const completed = mine.filter(p => p.stage === "Online");
-    const active = mine.filter(p => p.stage !== "Online" && p.stage !== "On hold");
-    const onHold = mine.filter(p => p.stage === "On hold");
+    const gdsMatch = p => (p.gd||"").split(",").map(s=>s.trim()).includes(name);
+    const mine = allProjectsIncludingArchived().filter(gdsMatch);
+    // Completed = createdAt in month AND onlineDate in month
+    const completed = perfMonth === "all"
+      ? mine.filter(p => p.stage === "Online")
+      : mine.filter(p => p.stage === "Online" && getYM(p.createdAt) === perfMonth && getYM(p.onlineDate) === perfMonth);
+    // Active = createdAt in month AND not yet online (from both Archive + Projects tabs)
+    const active = perfMonth === "all"
+      ? mine.filter(p => p.stage !== "Online" && p.stage !== "On hold")
+      : mine.filter(p => p.stage !== "Online" && p.stage !== "On hold" && getYM(p.createdAt) === perfMonth);
+    const onHold = perfMonth === "all"
+      ? mine.filter(p => p.stage === "On hold")
+      : mine.filter(p => p.stage === "On hold" && getYM(p.createdAt) === perfMonth);
 
     // Average days brief to live (completed only)
     let avgDays = null;
@@ -1454,7 +1647,9 @@ function renderPerf() {
     // Overdue active: past deadline, not online
     const overdueActive = active.filter(p => p.deadline && p.deadline < today_str).length;
 
-    return { name, di, mine, completed, active, onHold, avgDays, onTimeRate, overdueActive, total: mine.length };
+    // When filtering by month, total = completed in that month + active (current)
+    const total = completed.length + active.length + onHold.length;
+    return { name, di, mine, completed, active, onHold, avgDays, onTimeRate, overdueActive, total };
   });
 
   // Team totals for summary bar
@@ -1848,11 +2043,51 @@ function renderCopywriterPerf() {
   const body = document.getElementById("perf-body");
   const today_str = today();
 
+  // Build month selector
+  const allCompleted2 = allProjectsIncludingArchived().filter(p => p.stage === "Online");
+  const months2 = [...new Set(allCompleted2.map(p => {
+    if (!p.onlineDate) return null;
+    try { const d = new Date(p.onlineDate); if (isNaN(d)) return null; return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0"); } catch(e) { return null; }
+  }).filter(Boolean))].sort().reverse();
+  const mn2 = {"01":"Jan","02":"Feb","03":"Mar","04":"Apr","05":"May","06":"Jun","07":"Jul","08":"Aug","09":"Sep","10":"Oct","11":"Nov","12":"Dec"};
+  const mLabel2 = m => { const [y,mo] = m.split("-"); return (mn2[mo]||mo) + " " + y; };
+  const monthOpts2 = [`<option value="all" ${perfMonth==="all"?"selected":""}>All time</option>`,
+    ...months2.map(m => `<option value="${m}" ${perfMonth===m?"selected":""}>${mLabel2(m)}</option>`)
+  ].join("");
+  let mb2 = document.getElementById("perf-month-bar");
+  if (!mb2) {
+    mb2 = document.createElement("div");
+    mb2.id = "perf-month-bar";
+    mb2.style.cssText = "padding:10px 1.5rem;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;gap:10px;background:#fff;flex-shrink:0;";
+    const lbl2 = document.createElement("span");
+    lbl2.style.cssText = "font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aeaeb2;white-space:nowrap";
+    lbl2.textContent = "Period";
+    const sel2 = document.createElement("select");
+    sel2.id = "perf-month-select";
+    sel2.style.cssText = "flex:1;max-width:220px;padding:7px 30px 7px 12px;border:1.5px solid rgba(0,0,0,.1);border-radius:10px;font-size:13px;font-weight:600;color:#1a1a1a;background:#fff;outline:none;cursor:pointer;font-family:inherit;";
+    sel2.addEventListener("change", function() { perfMonth = this.value; switchPerfTab(currentPerfTab); });
+    mb2.appendChild(lbl2); mb2.appendChild(sel2);
+    const pp2 = document.getElementById("perf-body").parentNode;
+    const tabs2 = pp2.querySelector(".perf-tabs");
+    if (tabs2) tabs2.after(mb2); else pp2.insertBefore(mb2, document.getElementById("perf-body"));
+  }
+  document.getElementById("perf-month-select").innerHTML = monthOpts2;
+
   const stats = COPYWRITERS.map((name, di) => {
-    const mine = projects.filter(p => p.cw === name);
-    const completed = mine.filter(p => p.stage === "Online");
-    const active = mine.filter(p => p.stage !== "Online" && p.stage !== "On hold");
-    const onHold = mine.filter(p => p.stage === "On hold");
+    // Use all projects including archived, support comma-separated CW values
+    const cwMatch = p => (p.cw||"").split(",").map(s=>s.trim()).includes(name);
+    const mine = allProjectsIncludingArchived().filter(cwMatch);
+    // Completed = createdAt in month AND onlineDate in month
+    const completed = perfMonth === "all"
+      ? mine.filter(p => p.stage === "Online")
+      : mine.filter(p => p.stage === "Online" && getYM(p.createdAt) === perfMonth && getYM(p.onlineDate) === perfMonth);
+    // Active = createdAt in month AND not yet online (from both Archive + Projects tabs)
+    const active = perfMonth === "all"
+      ? mine.filter(p => p.stage !== "Online" && p.stage !== "On hold")
+      : mine.filter(p => p.stage !== "Online" && p.stage !== "On hold" && getYM(p.createdAt) === perfMonth);
+    const onHold = perfMonth === "all"
+      ? mine.filter(p => p.stage === "On hold")
+      : mine.filter(p => p.stage === "On hold" && getYM(p.createdAt) === perfMonth);
 
     const withDays = completed.filter(p => p.start && p.onlineDate);
     let avgDays = null;
@@ -1865,7 +2100,9 @@ function renderCopywriterPerf() {
     const onTimeRate = completedWithDeadline.length ? Math.round((onTime / completedWithDeadline.length) * 100) : null;
     const overdueActive = active.filter(p => p.deadline && p.deadline < today_str).length;
 
-    return { name, di, mine, completed, active, onHold, avgDays, onTimeRate, overdueActive, total: mine.length };
+    // When filtering by month, total = completed in that month + active (current)
+    const total = completed.length + active.length + onHold.length;
+    return { name, di, mine, completed, active, onHold, avgDays, onTimeRate, overdueActive, total };
   });
 
   const totalCompleted = stats.reduce((s, d) => s + d.completed.length, 0);
@@ -2903,6 +3140,391 @@ function showBudgetSyncResult(results, errorMsg) {
 
 
 
+// ── BUDGET READER ──────────────────────────────────────────────────────────
+const BUDGET_DATA = {
+  "Porsche Prestige": {
+    "Jan-26":{social:1994,p7:1994,google:5982},"Feb-26":{social:1994,p7:1994,google:5982},
+    "Mar-26":{social:2804,p7:2804,google:8413},"Apr-26":{social:2680,p7:2680,google:8039},
+    "May-26":{social:3116,p7:3116,google:9347},"Jun-26":{social:2804,p7:2804,google:8413},
+    "Jul-26":{social:2617,p7:2617,google:7852},"Aug-26":{social:2804,p7:2804,google:8413},
+    "Sep-26":{social:2804,p7:2804,google:8413},"Oct-26":{social:2804,p7:2804,google:8413},
+    "Nov-26":{social:2804,p7:2804,google:8413},"Dec-26":{social:1932,p7:1932,google:5795}
+  },
+  "Porsche West Island": {
+    "Jan-26":{social:1402,p7:0,google:3270},"Feb-26":{social:1402,p7:0,google:3270},
+    "Mar-26":{social:1971,p7:0,google:4599},"Apr-26":{social:1883,p7:0,google:4395},
+    "May-26":{social:2190,p7:0,google:5110},"Jun-26":{social:1971,p7:0,google:4599},
+    "Jul-26":{social:1840,p7:0,google:4292},"Aug-26":{social:1971,p7:0,google:4599},
+    "Sep-26":{social:1971,p7:0,google:4599},"Oct-26":{social:1971,p7:0,google:4599},
+    "Nov-26":{social:1971,p7:0,google:4599},"Dec-26":{social:1358,p7:0,google:3168}
+  },
+  "Audi Anjou": {
+    "Jan-26":{social:2112,p7:2112,google:6336},"Feb-26":{social:2112,p7:2112,google:6336},
+    "Mar-26":{social:2970,p7:2970,google:8910},"Apr-26":{social:2838,p7:2838,google:8514},
+    "May-26":{social:3300,p7:3300,google:9900},"Jun-26":{social:2970,p7:2970,google:8910},
+    "Jul-26":{social:2772,p7:2772,google:8316},"Aug-26":{social:2970,p7:2970,google:8910},
+    "Sep-26":{social:2970,p7:2970,google:8910},"Oct-26":{social:2970,p7:2970,google:8910},
+    "Nov-26":{social:2970,p7:2970,google:8910},"Dec-26":{social:2046,p7:2046,google:6138}
+  },
+  "Audi St-Laurent": {
+    "Jan-26":{social:3594,p7:3594,google:10783},"Feb-26":{social:3594,p7:3594,google:10783},
+    "Mar-26":{social:5054,p7:5054,google:15163},"Apr-26":{social:4830,p7:4830,google:14489},
+    "May-26":{social:5616,p7:5616,google:16848},"Jun-26":{social:5054,p7:5054,google:15163},
+    "Jul-26":{social:4717,p7:4717,google:14152},"Aug-26":{social:5054,p7:5054,google:15163},
+    "Sep-26":{social:5054,p7:5054,google:15163},"Oct-26":{social:5054,p7:5054,google:15163},
+    "Nov-26":{social:5054,p7:5054,google:15163},"Dec-26":{social:3482,p7:3482,google:10446}
+  },
+  "Audi Trois-Rivières": {
+    "Jan-26":{social:1417,p7:1417,google:4250},"Feb-26":{social:1417,p7:1417,google:4250},
+    "Mar-26":{social:1992,p7:1992,google:5976},"Apr-26":{social:1904,p7:1904,google:5711},
+    "May-26":{social:2214,p7:2214,google:6641},"Jun-26":{social:1992,p7:1992,google:5976},
+    "Jul-26":{social:1859,p7:1859,google:5578},"Aug-26":{social:1992,p7:1992,google:5976},
+    "Sep-26":{social:1992,p7:1992,google:5976},"Oct-26":{social:1992,p7:1992,google:5976},
+    "Nov-26":{social:1992,p7:1992,google:5976},"Dec-26":{social:1372,p7:1372,google:4117}
+  },
+  "Audi West-Island": {
+    "Jan-26":{social:2796,p7:2796,google:8387},"Feb-26":{social:2796,p7:2796,google:8387},
+    "Mar-26":{social:3931,p7:3931,google:11794},"Apr-26":{social:3756,p7:3756,google:11269},
+    "May-26":{social:4368,p7:4368,google:13104},"Jun-26":{social:3931,p7:3931,google:11794},
+    "Jul-26":{social:3669,p7:3669,google:11007},"Aug-26":{social:3931,p7:3931,google:11794},
+    "Sep-26":{social:3931,p7:3931,google:11794},"Oct-26":{social:3931,p7:3931,google:11794},
+    "Nov-26":{social:3931,p7:3931,google:11794},"Dec-26":{social:2708,p7:2708,google:8124}
+  },
+  "Nissan Anjou": {
+    "Jan-26":{social:2500,p7:0,google:7000},"Feb-26":{social:3500,p7:0,google:7000},
+    "Mar-26":{social:4000,p7:0,google:9000},"Apr-26":{social:4500,p7:0,google:10000},
+    "May-26":{social:4000,p7:0,google:9000},"Jun-26":{social:4000,p7:0,google:10000},
+    "Jul-26":{social:2000,p7:0,google:6000},"Aug-26":{social:4500,p7:0,google:10000},
+    "Sep-26":{social:4500,p7:0,google:10000},"Oct-26":{social:4000,p7:0,google:10000},
+    "Nov-26":{social:3000,p7:0,google:8000},"Dec-26":{social:2000,p7:0,google:7000}
+  },
+  "Nissan Jean Talon": {
+    "Jan-26":{social:2076,p7:0,google:6228},"Feb-26":{social:2076,p7:0,google:6228},
+    "Mar-26":{social:2920,p7:0,google:8759},"Apr-26":{social:2790,p7:0,google:8370},
+    "May-26":{social:3244,p7:0,google:9732},"Jun-26":{social:2920,p7:0,google:8759},
+    "Jul-26":{social:2725,p7:0,google:8175},"Aug-26":{social:2920,p7:0,google:8759},
+    "Sep-26":{social:2920,p7:0,google:8759},"Oct-26":{social:2920,p7:0,google:8759},
+    "Nov-26":{social:2920,p7:0,google:8759},"Dec-26":{social:2011,p7:0,google:6034}
+  },
+  "Nissan P.A.T.": {
+    "Jan-26":{social:1500,p7:0,google:4000},"Feb-26":{social:1500,p7:0,google:4000},
+    "Mar-26":{social:2000,p7:0,google:4800},"Apr-26":{social:3500,p7:0,google:5500},
+    "May-26":{social:3000,p7:0,google:5000},"Jun-26":{social:3000,p7:0,google:5500},
+    "Jul-26":{social:3000,p7:0,google:5500},"Aug-26":{social:1800,p7:0,google:3300},
+    "Sep-26":{social:3000,p7:0,google:5500},"Oct-26":{social:3000,p7:0,google:5500},
+    "Nov-26":{social:2400,p7:0,google:4400},"Dec-26":{social:1500,p7:0,google:2800}
+  },
+  "Nissan St-Constant": {
+    "Jan-26":{social:1089,p7:0,google:3266},"Feb-26":{social:1089,p7:0,google:3266},
+    "Mar-26":{social:1531,p7:0,google:4593},"Apr-26":{social:1463,p7:0,google:4389},
+    "May-26":{social:1701,p7:0,google:5103},"Jun-26":{social:1531,p7:0,google:4593},
+    "Jul-26":{social:1429,p7:0,google:4287},"Aug-26":{social:1531,p7:0,google:4593},
+    "Sep-26":{social:1531,p7:0,google:4593},"Oct-26":{social:1531,p7:0,google:4593},
+    "Nov-26":{social:1531,p7:0,google:4593},"Dec-26":{social:1055,p7:0,google:3164}
+  },
+  "Nissan St-Jacques": {
+    "Jan-26":{social:2000,p7:0,google:9000},"Feb-26":{social:2000,p7:0,google:9000},
+    "Mar-26":{social:2000,p7:0,google:9000},"Apr-26":{social:2000,p7:0,google:9000},
+    "May-26":{social:2000,p7:0,google:9000},"Jun-26":{social:2000,p7:0,google:9000},
+    "Jul-26":{social:2000,p7:0,google:9000},"Aug-26":{social:2000,p7:0,google:9000},
+    "Sep-26":{social:2000,p7:0,google:9000},"Oct-26":{social:2000,p7:0,google:9000},
+    "Nov-26":{social:2000,p7:0,google:9000},"Dec-26":{social:2000,p7:0,google:9000}
+  },
+  "Nissan St-leonard": {
+    "Jan-26":{social:1031,p7:0,google:5843},"Feb-26":{social:1031,p7:0,google:5843},
+    "Mar-26":{social:1450,p7:0,google:8216},"Apr-26":{social:1385,p7:0,google:7851},
+    "May-26":{social:1611,p7:0,google:9129},"Jun-26":{social:1450,p7:0,google:8216},
+    "Jul-26":{social:1353,p7:0,google:7668},"Aug-26":{social:1450,p7:0,google:8216},
+    "Sep-26":{social:1450,p7:0,google:8216},"Oct-26":{social:1450,p7:0,google:8216},
+    "Nov-26":{social:1450,p7:0,google:8216},"Dec-26":{social:999,p7:0,google:5660}
+  },
+  "Hyundai Anjou": {
+    "Jan-26":{social:2333,p7:2333,google:7000},"Feb-26":{social:2333,p7:2333,google:7000},
+    "Mar-26":{social:3281,p7:3281,google:9844},"Apr-26":{social:3136,p7:3136,google:9407},
+    "May-26":{social:3646,p7:3646,google:10938},"Jun-26":{social:3281,p7:3281,google:9844},
+    "Jul-26":{social:3063,p7:3063,google:9188},"Aug-26":{social:3281,p7:3281,google:9844},
+    "Sep-26":{social:3281,p7:3281,google:9844},"Oct-26":{social:3281,p7:3281,google:9844},
+    "Nov-26":{social:3281,p7:3281,google:9844},"Dec-26":{social:2261,p7:2261,google:6782}
+  },
+  "Hyundai P.A.T.": {
+    "Jan-26":{social:803,p7:803,google:2408},"Feb-26":{social:803,p7:803,google:2408},
+    "Mar-26":{social:1129,p7:1129,google:3386},"Apr-26":{social:1078,p7:1078,google:3235},
+    "May-26":{social:1254,p7:1254,google:3762},"Jun-26":{social:1129,p7:1129,google:3386},
+    "Jul-26":{social:1053,p7:1053,google:3160},"Aug-26":{social:1129,p7:1129,google:3386},
+    "Sep-26":{social:1129,p7:1129,google:3386},"Oct-26":{social:1129,p7:1129,google:3386},
+    "Nov-26":{social:1129,p7:1129,google:3386},"Dec-26":{social:777,p7:777,google:2332}
+  },
+  "Hyundai Ouest": {
+    "Jan-26":{social:1466,p7:1466,google:4399},"Feb-26":{social:1466,p7:1466,google:4399},
+    "Mar-26":{social:2062,p7:2062,google:6186},"Apr-26":{social:1970,p7:1970,google:5911},
+    "May-26":{social:2291,p7:2291,google:6873},"Jun-26":{social:2062,p7:2062,google:6186},
+    "Jul-26":{social:1924,p7:1924,google:5773},"Aug-26":{social:2062,p7:2062,google:6186},
+    "Sep-26":{social:2062,p7:2062,google:6186},"Oct-26":{social:2062,p7:2062,google:6186},
+    "Nov-26":{social:2062,p7:2062,google:6186},"Dec-26":{social:1420,p7:1420,google:4261}
+  },
+  "Hyundai St-Jacques": {
+    "Jan-26":{social:1450,p7:1450,google:4351},"Feb-26":{social:1450,p7:1450,google:4351},
+    "Mar-26":{social:2039,p7:2039,google:6118},"Apr-26":{social:1949,p7:1949,google:5846},
+    "May-26":{social:2266,p7:2266,google:6798},"Jun-26":{social:2039,p7:2039,google:6118},
+    "Jul-26":{social:1903,p7:1903,google:5710},"Aug-26":{social:2039,p7:2039,google:6118},
+    "Sep-26":{social:2039,p7:2039,google:6118},"Oct-26":{social:2039,p7:2039,google:6118},
+    "Nov-26":{social:2039,p7:2039,google:6118},"Dec-26":{social:1405,p7:1405,google:4215}
+  },
+  "Hyundai Électrifié": {
+    "Jan-26":{social:1311,p7:0,google:3060},"Feb-26":{social:1311,p7:0,google:3060},
+    "Mar-26":{social:1844,p7:0,google:4303},"Apr-26":{social:1762,p7:0,google:4112},
+    "May-26":{social:2049,p7:0,google:4781},"Jun-26":{social:1844,p7:0,google:4303},
+    "Jul-26":{social:1721,p7:0,google:4016},"Aug-26":{social:1844,p7:0,google:4303},
+    "Sep-26":{social:1844,p7:0,google:4303},"Oct-26":{social:1844,p7:0,google:4303},
+    "Nov-26":{social:1844,p7:0,google:4303},"Dec-26":{social:1270,p7:0,google:2964}
+  },
+  "Kia Nord": {
+    "Jan-26":{social:1258,p7:1258,google:3774},"Feb-26":{social:1258,p7:1258,google:3774},
+    "Mar-26":{social:1769,p7:1769,google:5307},"Apr-26":{social:1690,p7:1690,google:5071},
+    "May-26":{social:1966,p7:1966,google:5897},"Jun-26":{social:1769,p7:1769,google:5307},
+    "Jul-26":{social:1651,p7:1651,google:4953},"Aug-26":{social:1769,p7:1769,google:5307},
+    "Sep-26":{social:1769,p7:1769,google:5307},"Oct-26":{social:1769,p7:1769,google:5307},
+    "Nov-26":{social:1769,p7:1769,google:5307},"Dec-26":{social:1219,p7:1219,google:3656}
+  },
+  "Kia Ouest": {
+    "Jan-26":{social:1020,p7:1020,google:3060},"Feb-26":{social:1020,p7:1020,google:3060},
+    "Mar-26":{social:1434,p7:1434,google:4303},"Apr-26":{social:1370,p7:1370,google:4111},
+    "May-26":{social:1594,p7:1594,google:4781},"Jun-26":{social:1434,p7:1434,google:4303},
+    "Jul-26":{social:1339,p7:1339,google:4016},"Aug-26":{social:1434,p7:1434,google:4303},
+    "Sep-26":{social:1434,p7:1434,google:4303},"Oct-26":{social:1434,p7:1434,google:4303},
+    "Nov-26":{social:1434,p7:1434,google:4303},"Dec-26":{social:988,p7:988,google:2964}
+  },
+  "BMW West-Island": {
+    "Jan-26":{social:2961,p7:0,google:11843},"Feb-26":{social:2961,p7:0,google:11843},
+    "Mar-26":{social:4163,p7:0,google:16654},"Apr-26":{social:3978,p7:0,google:15913},
+    "May-26":{social:4626,p7:0,google:18504},"Jun-26":{social:4163,p7:0,google:16654},
+    "Jul-26":{social:3886,p7:0,google:15543},"Aug-26":{social:4163,p7:0,google:16654},
+    "Sep-26":{social:4163,p7:0,google:16654},"Oct-26":{social:4163,p7:0,google:16654},
+    "Nov-26":{social:4163,p7:0,google:16654},"Dec-26":{social:2868,p7:0,google:11472}
+  },
+  "Toyota St-Laurent": {
+    "Jan-26":{social:1452,p7:1452,google:4355},"Feb-26":{social:1452,p7:1452,google:4355},
+    "Mar-26":{social:2041,p7:2041,google:6124},"Apr-26":{social:1950,p7:1950,google:5851},
+    "May-26":{social:2268,p7:2268,google:6804},"Jun-26":{social:2041,p7:2041,google:6124},
+    "Jul-26":{social:1905,p7:1905,google:5715},"Aug-26":{social:2041,p7:2041,google:6124},
+    "Sep-26":{social:2041,p7:2041,google:6124},"Oct-26":{social:2041,p7:2041,google:6124},
+    "Nov-26":{social:2041,p7:2041,google:6124},"Dec-26":{social:1406,p7:1406,google:4218}
+  },
+  "Toyota Centre-Ville": {
+    "Jan-26":{social:1536,p7:1536,google:4608},"Feb-26":{social:1536,p7:1536,google:4608},
+    "Mar-26":{social:2160,p7:2160,google:6480},"Apr-26":{social:2064,p7:2064,google:6192},
+    "May-26":{social:2400,p7:2400,google:7200},"Jun-26":{social:2160,p7:2160,google:6480},
+    "Jul-26":{social:2016,p7:2016,google:6048},"Aug-26":{social:2160,p7:2160,google:6480},
+    "Sep-26":{social:2160,p7:2160,google:6480},"Oct-26":{social:2160,p7:2160,google:6480},
+    "Nov-26":{social:2160,p7:2160,google:6480},"Dec-26":{social:1488,p7:1488,google:4464}
+  },
+  "Honda": {
+    "Jan-26":{social:2632,p7:0,google:6142},"Feb-26":{social:2632,p7:0,google:6142},
+    "Mar-26":{social:3702,p7:0,google:8637},"Apr-26":{social:3537,p7:0,google:8253},
+    "May-26":{social:4113,p7:0,google:9597},"Jun-26":{social:3702,p7:0,google:8637},
+    "Jul-26":{social:3455,p7:0,google:8061},"Aug-26":{social:3702,p7:0,google:8637},
+    "Sep-26":{social:3702,p7:0,google:8637},"Oct-26":{social:3702,p7:0,google:8637},
+    "Nov-26":{social:3702,p7:0,google:8637},"Dec-26":{social:2550,p7:0,google:5950}
+  },
+  "Mazda Anjou": {
+    "Jan-26":{social:1826,p7:0,google:4260},"Feb-26":{social:1826,p7:0,google:4260},
+    "Mar-26":{social:2568,p7:0,google:5991},"Apr-26":{social:2454,p7:0,google:5725},
+    "May-26":{social:2853,p7:0,google:6657},"Jun-26":{social:2568,p7:0,google:5991},
+    "Jul-26":{social:2397,p7:0,google:5592},"Aug-26":{social:2568,p7:0,google:5991},
+    "Sep-26":{social:2568,p7:0,google:5991},"Oct-26":{social:2568,p7:0,google:5991},
+    "Nov-26":{social:2568,p7:0,google:5991},"Dec-26":{social:1769,p7:0,google:4127}
+  },
+  "Mazda Plateau": {
+    "Jan-26":{social:1343,p7:0,google:3134},"Feb-26":{social:1343,p7:0,google:3134},
+    "Mar-26":{social:1889,p7:0,google:4407},"Apr-26":{social:1805,p7:0,google:4211},
+    "May-26":{social:2099,p7:0,google:4897},"Jun-26":{social:1889,p7:0,google:4407},
+    "Jul-26":{social:1763,p7:0,google:4113},"Aug-26":{social:1889,p7:0,google:4407},
+    "Sep-26":{social:1889,p7:0,google:4407},"Oct-26":{social:1889,p7:0,google:4407},
+    "Nov-26":{social:1889,p7:0,google:4407},"Dec-26":{social:1301,p7:0,google:3036}
+  },
+  "Volkswagen Centre Ville": {
+    "Jan-26":{social:1548,p7:0,google:3611},"Feb-26":{social:1548,p7:0,google:3611},
+    "Mar-26":{social:2176,p7:0,google:5078},"Apr-26":{social:2079,p7:0,google:4852},
+    "May-26":{social:2418,p7:0,google:5642},"Jun-26":{social:2176,p7:0,google:5078},
+    "Jul-26":{social:2031,p7:0,google:4739},"Aug-26":{social:2176,p7:0,google:5078},
+    "Sep-26":{social:2176,p7:0,google:5078},"Oct-26":{social:2176,p7:0,google:5078},
+    "Nov-26":{social:2176,p7:0,google:5078},"Dec-26":{social:1499,p7:0,google:3498}
+  },
+  "Volkswagen Châteauguay": {
+    "Jan-26":{social:1056,p7:0,google:2464},"Feb-26":{social:1056,p7:0,google:2464},
+    "Mar-26":{social:1485,p7:0,google:3465},"Apr-26":{social:1419,p7:0,google:3311},
+    "May-26":{social:1650,p7:0,google:3850},"Jun-26":{social:1485,p7:0,google:3465},
+    "Jul-26":{social:1386,p7:0,google:3234},"Aug-26":{social:1485,p7:0,google:3465},
+    "Sep-26":{social:1485,p7:0,google:3465},"Oct-26":{social:1485,p7:0,google:3465},
+    "Nov-26":{social:1485,p7:0,google:3465},"Dec-26":{social:1023,p7:0,google:2387}
+  },
+  "Volkswagen St-Constant": {
+    "Jan-26":{social:1346,p7:0,google:3140},"Feb-26":{social:1346,p7:0,google:3140},
+    "Mar-26":{social:1893,p7:0,google:4416},"Apr-26":{social:1809,p7:0,google:4220},
+    "May-26":{social:2103,p7:0,google:4907},"Jun-26":{social:1893,p7:0,google:4416},
+    "Jul-26":{social:1767,p7:0,google:4122},"Aug-26":{social:1893,p7:0,google:4416},
+    "Sep-26":{social:1893,p7:0,google:4416},"Oct-26":{social:1893,p7:0,google:4416},
+    "Nov-26":{social:1893,p7:0,google:4416},"Dec-26":{social:1304,p7:0,google:3042}
+  },
+  "Volkswagen St-Laurent": {
+    "Jan-26":{social:1600,p7:0,google:3734},"Feb-26":{social:1600,p7:0,google:3734},
+    "Mar-26":{social:2250,p7:0,google:5251},"Apr-26":{social:2150,p7:0,google:5018},
+    "May-26":{social:2501,p7:0,google:5835},"Jun-26":{social:2250,p7:0,google:5251},
+    "Jul-26":{social:2100,p7:0,google:4901},"Aug-26":{social:2250,p7:0,google:5251},
+    "Sep-26":{social:2250,p7:0,google:5251},"Oct-26":{social:2250,p7:0,google:5251},
+    "Nov-26":{social:2250,p7:0,google:5251},"Dec-26":{social:1550,p7:0,google:3617}
+  },
+  "Lexus Brossard": {
+    "Jan-26":{social:1888,p7:1888,google:5663},"Feb-26":{social:1888,p7:1888,google:5663},
+    "Mar-26":{social:2655,p7:2655,google:7964},"Apr-26":{social:2537,p7:2537,google:7610},
+    "May-26":{social:2950,p7:2950,google:8849},"Jun-26":{social:2655,p7:2655,google:7964},
+    "Jul-26":{social:2478,p7:2478,google:7433},"Aug-26":{social:2655,p7:2655,google:7964},
+    "Sep-26":{social:2655,p7:2655,google:7964},"Oct-26":{social:2655,p7:2655,google:7964},
+    "Nov-26":{social:2655,p7:2655,google:7964},"Dec-26":{social:1829,p7:1829,google:5486}
+  },
+  "Lexus St-Laurent": {
+    "Jan-26":{social:2765,p7:2765,google:8294},"Feb-26":{social:2765,p7:2765,google:8294},
+    "Mar-26":{social:3888,p7:3888,google:11664},"Apr-26":{social:3715,p7:3715,google:11146},
+    "May-26":{social:4320,p7:4320,google:12960},"Jun-26":{social:3888,p7:3888,google:11664},
+    "Jul-26":{social:3629,p7:3629,google:10886},"Aug-26":{social:3888,p7:3888,google:11664},
+    "Sep-26":{social:3888,p7:3888,google:11664},"Oct-26":{social:3888,p7:3888,google:11664},
+    "Nov-26":{social:3888,p7:3888,google:11664},"Dec-26":{social:2678,p7:2678,google:8035}
+  },
+  "Jaguar West Island": {
+    "Jan-26":{social:3008,p7:3008,google:9024},"Feb-26":{social:3008,p7:3008,google:9024},
+    "Mar-26":{social:4230,p7:4230,google:12690},"Apr-26":{social:4042,p7:4042,google:12126},
+    "May-26":{social:4700,p7:4700,google:14100},"Jun-26":{social:4230,p7:4230,google:12690},
+    "Jul-26":{social:3948,p7:3948,google:11844},"Aug-26":{social:4230,p7:4230,google:12690},
+    "Sep-26":{social:4230,p7:4230,google:12690},"Oct-26":{social:4230,p7:4230,google:12690},
+    "Nov-26":{social:4230,p7:4230,google:12690},"Dec-26":{social:2914,p7:2914,google:8742}
+  },
+  "Land Rover West Island": {
+    "Jan-26":{social:3008,p7:3008,google:9024},"Feb-26":{social:3008,p7:3008,google:9024},
+    "Mar-26":{social:4230,p7:4230,google:12690},"Apr-26":{social:4042,p7:4042,google:12126},
+    "May-26":{social:4700,p7:4700,google:14100},"Jun-26":{social:4230,p7:4230,google:12690},
+    "Jul-26":{social:3948,p7:3948,google:11844},"Aug-26":{social:4230,p7:4230,google:12690},
+    "Sep-26":{social:4230,p7:4230,google:12690},"Oct-26":{social:4230,p7:4230,google:12690},
+    "Nov-26":{social:4230,p7:4230,google:12690},"Dec-26":{social:2914,p7:2914,google:8742}
+  },
+  "Lincoln": {
+    "Jan-26":{social:1728,p7:0,google:5184},"Feb-26":{social:1728,p7:0,google:5184},
+    "Mar-26":{social:2430,p7:0,google:7290},"Apr-26":{social:2322,p7:0,google:6966},
+    "May-26":{social:2700,p7:0,google:8100},"Jun-26":{social:2430,p7:0,google:7290},
+    "Jul-26":{social:2268,p7:0,google:6804},"Aug-26":{social:2430,p7:0,google:7290},
+    "Sep-26":{social:2430,p7:0,google:7290},"Oct-26":{social:2430,p7:0,google:7290},
+    "Nov-26":{social:2430,p7:0,google:7290},"Dec-26":{social:1674,p7:0,google:5022}
+  },
+  "Acura": {
+    "Jan-26":{social:864,p7:0,google:2016},"Feb-26":{social:864,p7:0,google:2016},
+    "Mar-26":{social:1215,p7:0,google:2835},"Apr-26":{social:1161,p7:0,google:2709},
+    "May-26":{social:1350,p7:0,google:3150},"Jun-26":{social:1215,p7:0,google:2835},
+    "Jul-26":{social:1134,p7:0,google:2646},"Aug-26":{social:1215,p7:0,google:2835},
+    "Sep-26":{social:1215,p7:0,google:2835},"Oct-26":{social:1215,p7:0,google:2835},
+    "Nov-26":{social:1215,p7:0,google:2835},"Dec-26":{social:837,p7:0,google:1953}
+  },
+  "Jeep Chrysler Gabriel": {
+    "Jan-26":{social:1920,p7:0,google:5760},"Feb-26":{social:1920,p7:0,google:5760},
+    "Mar-26":{social:2700,p7:0,google:8100},"Apr-26":{social:2580,p7:0,google:7740},
+    "May-26":{social:3000,p7:0,google:9000},"Jun-26":{social:2700,p7:0,google:8100},
+    "Jul-26":{social:2520,p7:0,google:7560},"Aug-26":{social:2700,p7:0,google:8100},
+    "Sep-26":{social:2700,p7:0,google:8100},"Oct-26":{social:2700,p7:0,google:8100},
+    "Nov-26":{social:2700,p7:0,google:8100},"Dec-26":{social:1860,p7:0,google:5580}
+  }
+};
+
+const BUDGET_BRANDS = {
+  "Porsche":     ["Porsche Prestige","Porsche West Island"],
+  "Audi":        ["Audi Anjou","Audi St-Laurent","Audi Trois-Rivières","Audi West-Island"],
+  "Nissan":      ["Nissan Anjou","Nissan Jean Talon","Nissan P.A.T.","Nissan St-Constant","Nissan St-Jacques","Nissan St-leonard"],
+  "Hyundai":     ["Hyundai Anjou","Hyundai P.A.T.","Hyundai Ouest","Hyundai St-Jacques","Hyundai Électrifié"],
+  "Kia":         ["Kia Nord","Kia Ouest"],
+  "BMW":         ["BMW West-Island"],
+  "Toyota":      ["Toyota St-Laurent","Toyota Centre-Ville"],
+  "Honda":       ["Honda"],
+  "Mazda":       ["Mazda Anjou","Mazda Plateau"],
+  "Volkswagen":  ["Volkswagen Centre Ville","Volkswagen Châteauguay","Volkswagen St-Constant","Volkswagen St-Laurent"],
+  "Lexus":       ["Lexus Brossard","Lexus St-Laurent"],
+  "Jaguar/LR":   ["Jaguar West Island","Land Rover West Island"],
+  "Lincoln":     ["Lincoln"],
+  "Acura":       ["Acura"],
+  "Jeep Chrysler":["Jeep Chrysler Gabriel"]
+};
+
+const BUDGET_LAST_REFRESH = "June 2, 2026";
+const SYNC_MONTH_LABELS = {1:"Jan-26",2:"Feb-26",3:"Mar-26",4:"Apr-26",5:"May-26",6:"Jun-26",7:"Jul-26",8:"Aug-26",9:"Sep-26",10:"Oct-26",11:"Nov-26",12:"Dec-26"};
+const SYNC_MONTH_NAMES  = {1:"January",2:"February",3:"March",4:"April",5:"May",6:"June",7:"July",8:"August",9:"September",10:"October",11:"November",12:"December"};
+
+function fmtCAD(n) { if (!n && n !== 0) return "—"; return "$" + Math.round(n).toLocaleString("en-CA"); }
+
+function openBudgetSyncModal() {
+  const ex = document.getElementById("budget-sync-overlay");
+  if (ex) ex.remove();
+  const now = new Date();
+  const monthOptions = Object.entries(SYNC_MONTH_NAMES).map(([num,name]) =>
+    `<option value="${num}" ${parseInt(num)===now.getMonth()+1?"selected":""}>${name} 2026</option>`).join("");
+  const brandOptions = Object.keys(BUDGET_BRANDS).map(b => `<option value="${b}">${b}</option>`).join("");
+  const selStyle = "width:100%;padding:10px 40px 10px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;font-size:14px;font-weight:600;color:#1a1a1a;background:#fff;outline:none;cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none;height:44px;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2 4l4 4 4-4%22 fill=%22none%22 stroke=%22%23aeaeb2%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;box-sizing:border-box";
+  const overlay = document.createElement("div");
+  overlay.id = "budget-sync-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(8px)";
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.15);width:100%;max-width:620px;max-height:90vh;display:flex;flex-direction:column;border:1px solid rgba(0,0,0,.08);overflow:hidden">
+      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#A51C30,transparent)"></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:38px;height:38px;background:rgba(165,28,48,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#A51C30;font-size:18px"><i class="ti ti-report-money"></i></div>
+          <div><div style="font-size:16px;font-weight:700;color:#1a1a1a">Budget Reader</div><div style="font-size:12px;color:#aeaeb2">Data as of ${BUDGET_LAST_REFRESH} · 15 brands</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button onclick="document.getElementById('budget-sync-overlay').remove()" style="background:rgba(0,0,0,.05);border:none;border-radius:999px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6e6e73;font-size:15px"><i class="ti ti-x"></i></button>
+        </div>
+      </div>
+      <div style="padding:1rem 1.5rem;border-bottom:1px solid rgba(0,0,0,.06);flex-shrink:0;display:flex;gap:10px">
+        <div style="flex:1"><div style="font-size:11px;font-weight:700;color:#aeaeb2;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Month</div>
+        <select id="sync-month" onchange="renderBudgetResults()" style="${selStyle}">${monthOptions}</select></div>
+        <div style="flex:1"><div style="font-size:11px;font-weight:700;color:#aeaeb2;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Brand</div>
+        <select id="sync-brand" onchange="renderBudgetResults()" style="${selStyle}">${brandOptions}</select></div>
+      </div>
+      <div id="budget-results-area" style="flex:1;overflow-y:auto;padding:1rem 1.5rem"></div>
+      <div style="padding:.75rem 1.5rem;border-top:1px solid rgba(0,0,0,.06);flex-shrink:0;display:flex;justify-content:flex-end">
+        <button onclick="document.getElementById('budget-sync-overlay').remove()" style="padding:8px 20px;border-radius:980px;border:1.5px solid rgba(0,0,0,.1);background:#fff;color:#6e6e73;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">Close</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  renderBudgetResults();
+}
+
+function renderBudgetResults() {
+  const monthNum  = parseInt(document.getElementById("sync-month").value);
+  const monthKey  = SYNC_MONTH_LABELS[monthNum];
+  const monthName = SYNC_MONTH_NAMES[monthNum];
+  const brand     = document.getElementById("sync-brand").value;
+  const dealers   = BUDGET_BRANDS[brand] || [];
+  const area      = document.getElementById("budget-results-area");
+  let html = `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aeaeb2;margin-bottom:10px">${brand} — ${monthName} 2026</div>`;
+  html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">`;
+  for (const dealerName of dealers) {
+    const d = BUDGET_DATA[dealerName] && BUDGET_DATA[dealerName][monthKey];
+    if (!d) { html += `<div style="background:#f9f9fb;border:1px solid rgba(0,0,0,.07);border-radius:14px;padding:.9rem 1rem;opacity:.5"><div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:6px">${dealerName}</div><div style="font-size:11px;color:#aeaeb2">No data</div></div>`; continue; }
+    const total = d.social + d.p7 + d.google;
+    html += `<div style="background:#f9f9fb;border:1px solid rgba(0,0,0,.07);border-radius:14px;padding:.9rem 1rem;">
+      <div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(0,0,0,.06)">${dealerName}</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:#6e6e73">Social Ads</span><span style="font-size:12px;font-weight:600;color:#1a1a1a">${fmtCAD(d.social)}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:#6e6e73">P7 / PMAX</span><span style="font-size:12px;font-weight:600;color:#1a1a1a">${fmtCAD(d.p7)}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:#6e6e73">Google Ads</span><span style="font-size:12px;font-weight:600;color:#1a1a1a">${fmtCAD(d.google)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid rgba(0,0,0,.06);margin-top:2px">
+          <span style="font-size:11px;font-weight:700;color:#6e6e73">Total Internet</span>
+          <span style="font-size:13px;font-weight:700;color:#A51C30">${fmtCAD(total)}</span>
+        </div>
+      </div>
+    </div>`;
+  }
+  html += `</div>`;
+  area.innerHTML = html;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── SOCIAL MEDIA TRACKER ────────────────────────────────────────────────────
 let socialPosts = [];
 
@@ -2936,11 +3558,11 @@ function syncDeleteSocialPost(id) {
 function getDriveThumbnail(driveLink) {
   if (!driveLink) return null;
   let fileId = null;
-  const m1 = driveLink.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  const m1 = driveLink.match(/[/]file[/]d[/]([a-zA-Z0-9_-]+)/);
   if (m1) fileId = m1[1];
   const m2 = driveLink.match(/[?&]id=([a-zA-Z0-9_-]+)/);
   if (!fileId && m2) fileId = m2[1];
-  const m3 = driveLink.match(/open\?id=([a-zA-Z0-9_-]+)/);
+  const m3 = driveLink.match(/open[?]id=([a-zA-Z0-9_-]+)/);
   if (!fileId && m3) fileId = m3[1];
   if (!fileId) return null;
   return "https://lh3.googleusercontent.com/d/" + fileId;
@@ -3367,10 +3989,18 @@ function saveSocialPost(existingId) {
       </button>
 
       <button class="mgmt-action" onclick="closeMgmt();openBudgetSyncModal()">
-        <div class="mgmt-action-icon" style="background:rgba(52,199,89,.1);color:#1a8f3c"><i class="ti ti-currency-dollar"></i></div>
+        <div class="mgmt-action-icon" style="background:rgba(165,28,48,.1);color:#A51C30"><i class="ti ti-report-money"></i></div>
         <div class="mgmt-action-text">
-          <div class="mgmt-action-title">Sync Budget to Media Sheet</div>
-          <div class="mgmt-action-desc">Pull Social Ads, P7 & Google budgets from spending files into the monthly media sheet</div>
+          <div class="mgmt-action-title">Budget Reader</div>
+          <div class="mgmt-action-desc">Read Social Ads, P7 & Google spending by brand and month</div>
+        </div>
+        <i class="ti ti-chevron-right mgmt-action-arrow"></i>
+      </button>
+      <button class="mgmt-action" onclick="closeMgmt();manualArchive()">
+        <div class="mgmt-action-icon" style="background:rgba(52,199,89,.1);color:#1a8f3c"><i class="ti ti-archive"></i></div>
+        <div class="mgmt-action-text">
+          <div class="mgmt-action-title">Archive Completed Projects</div>
+          <div class="mgmt-action-desc">Remove all Online projects from previous months — keeps the board clean</div>
         </div>
         <i class="ti ti-chevron-right mgmt-action-arrow"></i>
       </button>
