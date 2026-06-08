@@ -253,6 +253,16 @@ select:hover { background-color:#fff; border-color:rgba(0,0,0,.15); }
 .soc-post { background:#f9f9fb; border:1px solid rgba(0,0,0,.07); border-radius:14px; padding:1rem 1.1rem; margin-bottom:10px; }
 .soc-post:hover { border-color:rgba(0,0,0,.12); box-shadow:0 2px 12px rgba(0,0,0,.05); }
 .soc-dealer-header { font-size:13px; font-weight:700; color:#1a1a1a; margin:16px 0 8px; padding-bottom:6px; border-bottom:1.5px solid rgba(0,0,0,.08); display:flex; align-items:center; justify-content:space-between; }
+.ts-panel { position:fixed; top:0; right:0; bottom:0; width:min(1000px,100vw); background:rgba(255,255,255,.97); backdrop-filter:blur(32px); z-index:160; transform:translateX(100%); transition:transform .35s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; box-shadow:-8px 0 48px rgba(0,0,0,.12); border-left:1px solid rgba(0,0,0,.06); }
+.ts-panel.open { transform:translateX(0); }
+.ts-cell { width:100%; height:20px !important; max-height:20px !important; min-height:20px !important; overflow:hidden; border:1px solid rgba(0,0,0,.07); border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; line-height:1; box-sizing:border-box; }
+.ts-cell:hover { border-color:#7c3aed; box-shadow:0 0 0 2px rgba(124,58,237,.15); }
+.ts-cell.sick { background:rgba(255,59,48,.1); color:#c0392b; border-color:rgba(255,59,48,.25); }
+.ts-cell.vacation { background:rgba(48,209,88,.1); color:#1a8f3c; border-color:rgba(48,209,88,.25); }
+.ts-cell.unpaid { background:rgba(255,149,0,.1); color:#c67b00; border-color:rgba(255,149,0,.25); }
+.ts-cell.maternity { background:rgba(255,45,85,.1); color:#a8003c; border-color:rgba(255,45,85,.25); }
+.ts-cell.parthours { background:rgba(88,86,214,.1); color:#5856d6; border-color:rgba(88,86,214,.25); }
+.ts-cell.empty { background:#fafafa; color:#aeaeb2; }
 .perf-panel-header { padding:1.25rem 1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
 .perf-panel-title { display:flex; align-items:center; gap:10px; }
 .perf-panel-title h2 { font-size:17px; font-weight:700; color:var(--text); letter-spacing:-0.03em; }
@@ -650,7 +660,17 @@ select:hover { background-color:#fff; border-color:rgba(0,0,0,.15); }
 .identity-card { background:#fff; border-radius:24px; padding:2.5rem 2rem 2rem; max-width:380px; width:100%; text-align:center; box-shadow:0 32px 80px rgba(0,0,0,.2); position:relative; overflow:hidden; animation:reminderCardIn .4s cubic-bezier(.34,1.56,.64,1); }
 .identity-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg,transparent,#A51C30,transparent); }
 
+
+/* ── FOOTER ── */
+.gg-footer { background:rgba(255,255,255,.6); backdrop-filter:blur(20px); border-top:1px solid rgba(0,0,0,.07); padding:2rem 1.5rem 1.5rem; margin-top:2rem; }
+.footer-grid { display:grid; grid-template-columns:repeat(10,1fr); gap:1.25rem; margin-bottom:1.5rem; } @media (max-width:1200px) { .footer-grid { grid-template-columns:repeat(5,1fr); } } @media (max-width:768px) { .footer-grid { grid-template-columns:repeat(3,1fr); } } @media (max-width:480px) { .footer-grid { grid-template-columns:repeat(2,1fr); } }
+.footer-group-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:#A51C30; margin-bottom:8px; padding-bottom:5px; border-bottom:2px solid rgba(165,28,48,.15); }
+.footer-link { display:block; font-size:12px; color:#6e6e73; text-decoration:none; padding:2px 0; transition:color .15s; white-space:normal; word-break:break-word; }
+.footer-link:hover { color:#A51C30; }
+.footer-bottom { border-top:1px solid rgba(0,0,0,.06); padding-top:1rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+.footer-logo-text { font-size:11px; font-weight:700; color:#aeaeb2; letter-spacing:.04em; }
 </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -843,6 +863,7 @@ function doPost(e) {
       <button class="icon-btn" onclick="openMgmt()" style="color:var(--red);border-color:#fecaca"><i class="ti ti-settings-2" style="font-size:15px"></i> Management</button>
       <button class="icon-btn" onclick="openSocialTracker()" style="color:#5856d6;border-color:#c7d2fe"><i class="ti ti-brand-instagram" style="font-size:15px"></i> Social Media</button>
       <button class="icon-btn" onclick="openPrintPanel()" style="color:#0369a1;border-color:#bae6fd"><i class="ti ti-printer" style="font-size:15px"></i> Print</button>
+      <button class="icon-btn" id="timesheet-btn" onclick="openTimesheetPanel()" style="color:#7c3aed;border-color:#ddd6fe;display:none"><i class="ti ti-calendar-stats" style="font-size:15px"></i> Timesheet</button>
       <div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.03);border:1.5px solid rgba(0,0,0,.07);border-radius:980px;padding:4px 4px 4px 12px">
         <div id="identity-badge" style="display:none;background:linear-gradient(135deg,#A51C30,#c0263d);border-radius:50%;width:22px;height:22px;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0">?</div>
         <span id="identity-name-label" style="font-size:12px;font-weight:600;color:#1a1a1a">Guest</span>
@@ -1121,10 +1142,8 @@ function startApp() {
     setTimeout(checkDueReminders, 2000);
     setTimeout(checkStaleProjects, 5000);
   } else {
-    fetchProjects();
-    fetchArchive();
-    loadSocialPosts();
-    let refreshInterval = setInterval(fetchProjects, 30000);
+    fetchAll();
+    let refreshInterval = setInterval(fetchAll, 30000);
     window._resetRefresh = function() {
       clearInterval(refreshInterval);
       refreshInterval = setInterval(fetchProjects, 30000);
@@ -1142,6 +1161,68 @@ function setSyncing(v) {
 
 let lastWrite = 0;
 const WRITE_COOLDOWN = 60000;
+
+function fetchAll() {
+  if (demoMode) {
+    const saved = localStorage.getItem("gg_local");
+    if (saved) try { projects = JSON.parse(saved); } catch(e) {}
+    autoArchiveOnlineProjects();
+    renderAll();
+    const footer = document.getElementById("gg-footer");
+    if (footer) footer.style.display = "block";
+    return;
+  }
+  const cbName = "ggall_" + Date.now();
+  const script = document.createElement("script");
+  const spinner = document.getElementById("projects-list");
+  if (spinner) spinner.innerHTML = `<div class="empty"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite;font-size:28px"></i><p>Loading…</p></div>`;
+
+  window[cbName] = (data) => {
+    delete window[cbName];
+    if (script.parentNode) script.parentNode.removeChild(script);
+    if (data && data.ok) {
+      // Projects
+      projects = (data.projects || []);
+      // Archive
+      archivedProjects = (data.archive || []);
+      // Social posts
+      socialPosts = (data.social || []).map(row => {
+        const clean = {};
+        for (const [k, v] of Object.entries(row)) {
+          clean[k] = (v === "undefined" || v === undefined || v === null) ? "" : v;
+        }
+        return clean;
+      }).filter(row => row.id && row.id !== "" && row.dealer && row.dealer !== "" && row.status && row.status !== "");
+      // Print records
+      printRecords = (data.print || []).map(r => ({
+        id: r.id||"", project: r.project||"", dealer: r.dealer||"",
+        item: r.item||"", itemLabel: r.itemLabel||"", qty: parseFloat(r.qty)||0,
+        attn: r.attn||"", total: parseFloat(r.total)||0, date: r.date||"", createdBy: r.createdBy||""
+      })).filter(r => r.id !== "");
+      // Timesheet
+      tsData = {};
+      (data.timesheet || []).forEach(r => {
+        if (r.key && r.value !== undefined) tsData[r.key] = r.value;
+      });
+
+      autoArchiveOnlineProjects();
+      renderAll();
+      // Show footer once data is loaded
+      const footer = document.getElementById("gg-footer");
+      if (footer) footer.style.display = "block";
+
+      // Re-render open panels
+      if (document.getElementById("social-panel")?.classList.contains("open")) renderSocialPanel();
+      if (document.getElementById("print-panel")?.classList.contains("open")) renderPrintRevenue();
+      if (document.getElementById("ts-panel")?.classList.contains("open")) renderTimesheetView();
+    }
+  };
+  const sep = apiUrl.includes("?") ? "&" : "?";
+  script.src = apiUrl + sep + new URLSearchParams({ callback: cbName, action: "readAll", t: Date.now() });
+  document.head.appendChild(script);
+}
+
+function fetchProjects() { fetchAll(); }
 
 function fetchProjects() {
   if (demoMode) return;
@@ -1272,6 +1353,8 @@ function apiPost(payload) {
       src += "&action=saveSocial&p=" + encodeURIComponent(payload.p);
     } else if (payload.action === "savePrint") {
       src += "&action=savePrint&p=" + encodeURIComponent(payload.p);
+    } else if (payload.action === "saveTimesheet") {
+      src += "&action=saveTimesheet&tskey=" + encodeURIComponent(payload.tskey) + "&tsvalue=" + encodeURIComponent(payload.tsvalue || "");
     } else if (payload.action === "deletePrint") {
       src += "&action=deletePrint&id=" + encodeURIComponent(payload.id);
     } else if (payload.action === "archiveProjects") {
@@ -1460,7 +1543,7 @@ function openEdit(id) {
 
 function closeModal() { document.getElementById("proj-modal").style.display = "none"; }
 
-async function saveProject() {
+function saveProject() {
   const name = document.getElementById("f-name").value.trim();
   if (!name) { showToast("Please enter a project name", "error"); return; }
   const stage = document.getElementById("f-stage2").value;
@@ -1482,28 +1565,33 @@ async function saveProject() {
   if (stage === "Online") {
     p.onlineDate = (old && old.onlineDate) ? old.onlineDate : today();
   }
-  if (editId) { projects = projects.map(x => x.id == editId ? p : x); await apiPost({ action: "update", project: p }); }
-  else { projects.unshift(p); await apiPost({ action: "add", project: p }); }
+  // Optimistic update — update UI instantly, sync to sheet in background
+  if (editId) { projects = projects.map(x => x.id == editId ? p : x); }
+  else { projects.unshift(p); }
   saveLocal(); renderAll(); closeModal();
   showToast(editId ? "Project updated ✓" : "Project added ✓", "success");
+  // Background sync
+  apiPost({ action: editId ? "update" : "add", project: p });
 }
 
-async function advStage(id) {
+function advStage(id) {
   const p = projects.find(x => x.id == id); if (!p) return;
   const ni = STAGES.indexOf(p.stage) + 1;
   if (ni >= STAGES.length - 1) return;
   p.stage = STAGES[ni];
   if (p.stage === "Online") p.onlineDate = today();
   p.lastUpdated = new Date().toISOString();
-  await apiPost({ action: "update", project: p });
+  // Optimistic — update UI instantly, sync in background
   saveLocal(); renderAll();
   showToast(`Moved to: ${p.stage}`, "success");
+  apiPost({ action: "update", project: p });
 }
 
-async function delProj(id) {
+function delProj(id) {
   if (!confirm("Delete this project? This cannot be undone.")) return;
   projects = projects.filter(x => x.id != id);
-  await apiPost({ action: "delete", project: { id } });
+  saveLocal(); renderAll();
+  apiPost({ action: "delete", project: { id } });
   saveLocal(); renderAll();
   showToast("Project deleted");
 }
@@ -2877,6 +2965,9 @@ function setIdentity(name) {
   localStorage.setItem("gg_identity", name);
   document.getElementById("identity-overlay").classList.remove("show");
   updateIdentityBadge();
+  // Show timesheet button only for Michel
+  const tsBtn = document.getElementById("timesheet-btn");
+  if (tsBtn) tsBtn.style.display = name === "Michel Tanbe" ? "flex" : "none";
   showToast("Welcome back, " + name.split(" ")[0] + "! 👋", "success");
 }
 
@@ -2896,6 +2987,9 @@ function isGuest() {
 function updateIdentityBadge() {
   const badge = document.getElementById("identity-badge");
   const nameLabel = document.getElementById("identity-name-label");
+  // Show/hide timesheet button based on current user
+  const tsBtn = document.getElementById("timesheet-btn");
+  if (tsBtn) tsBtn.style.display = currentUser === "Michel Tanbe" ? "flex" : "none";
   if (!badge || !currentUser) return;
   const user = Object.values(USERS).find(u => u.name === currentUser);
   if (user) {
@@ -4253,6 +4347,423 @@ function deletePrintRecord(id) {
   renderPrintRevenue();
 }
 // ─────────────────────────────────────────────────────────────────────────────
+
+
+// ── TIMESHEET SYSTEM ─────────────────────────────────────────────────────────
+const TS_EMPLOYEES = [
+  "Michel Tanbe","Karam Merjanian","Joelle Bali","Carlo Gabriel Marquez",
+  "Youssef Istanbouli","Ashraf Al Moutlak","Ion Budeci","Julie Zhu",
+  "Mark Doummar","Jaky Isaac","Shems Abdelkefi","George Moubayed",
+  "Claudia Chemali","Maya Piscopos"
+];
+
+const TS_TYPES = [
+  { key:"",           label:"— Clear —",     cls:"empty" },
+  { key:"Sick Day",   label:"🤒 Sick Day",    cls:"sick" },
+  { key:"Vacation",   label:"🏖️ Vacation",   cls:"vacation" },
+  { key:"Unpaid Day Off", label:"💸 Unpaid Day Off", cls:"unpaid" },
+  { key:"Maternity Leave", label:"👶 Maternity Leave", cls:"maternity" },
+  { key:"Part Hours", label:"⏱️ Part Hours",  cls:"parthours" }
+];
+
+// tsData: { "YYYY-MM-DD_EmployeeName": "Sick Day" | "Vacation" | ... }
+let tsData = {};
+let tsCurrentWeekStart = null;
+let tsCurrentTab = "week";
+
+function getTSCellClass(val) {
+  if (!val) return "empty";
+  const v = val.toLowerCase();
+  if (v.includes("sick")) return "sick";
+  if (v.includes("vacation") || v.includes("vacati")) return "vacation";
+  if (v.includes("unpaid") || v.includes("day off")) return "unpaid";
+  if (v.includes("maternity")) return "maternity";
+  if (v.includes("part") || v.includes("hour")) return "parthours";
+  return "empty";
+}
+
+function getTSCellLabel(val) {
+  if (!val) return "";
+  const v = val.toLowerCase();
+  if (v.includes("sick")) return "Sick";
+  if (v.includes("vacation") || v.includes("vacati")) return "Vacation";
+  if (v.includes("unpaid") || v.includes("day off")) return "Unpaid";
+  if (v.includes("maternity")) return "Maternity";
+  if (v.includes("part") || v.includes("hour")) return "Part Hrs";
+  return val.substring(0,8);
+}
+
+function getMondayOfWeek(date) {
+  // Bi-weekly anchor: Pay period 11 started Mon May 25, 2026
+  const ANCHOR = new Date(2026, 4, 25); // May 25, 2026
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  const diffDays = Math.floor((d - ANCHOR) / (1000*60*60*24));
+  const periodIndex = Math.floor(diffDays / 14);
+  const periodStart = new Date(ANCHOR);
+  periodStart.setDate(ANCHOR.getDate() + periodIndex * 14);
+  return periodStart;
+}
+
+function fmtDate(d) {
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+
+function fmtDateShort(d) {
+  const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return days[d.getDay()] + " " + months[d.getMonth()] + " " + d.getDate();
+}
+
+function openTimesheetPanel() {
+  document.getElementById("ts-panel").classList.add("open");
+  document.getElementById("ts-overlay").style.display = "block";
+  if (!tsCurrentWeekStart) tsCurrentWeekStart = getMondayOfWeek(new Date());
+  loadTimesheetData();
+}
+
+function closeTimesheetPanel() {
+  document.getElementById("ts-panel").classList.remove("open");
+  document.getElementById("ts-overlay").style.display = "none";
+  document.getElementById("ts-popover").style.display = "none";
+}
+
+function tsNavWeek(dir) {
+  const d = new Date(tsCurrentWeekStart);
+  d.setDate(d.getDate() + dir * 14);
+  tsCurrentWeekStart = d;
+  renderTimesheetView();
+}
+
+function tsGoToday() {
+  tsCurrentWeekStart = getMondayOfWeek(new Date());
+  renderTimesheetView();
+}
+
+function tsSwitchTab(tab) {
+  tsCurrentTab = tab;
+  document.getElementById("ts-tab-week").style.borderBottomColor   = tab === "week"    ? "#7c3aed" : "transparent";
+  document.getElementById("ts-tab-week").style.color                = tab === "week"    ? "#7c3aed" : "#aeaeb2";
+  document.getElementById("ts-tab-week").style.fontWeight           = tab === "week"    ? "700" : "600";
+  document.getElementById("ts-tab-summary").style.borderBottomColor = tab === "summary" ? "#7c3aed" : "transparent";
+  document.getElementById("ts-tab-summary").style.color             = tab === "summary" ? "#7c3aed" : "#aeaeb2";
+  document.getElementById("ts-tab-summary").style.fontWeight        = tab === "summary" ? "700" : "600";
+  renderTimesheetView();
+}
+
+function loadTimesheetData() {
+  if (demoMode) { renderTimesheetView(); return; }
+  const cbName = "gsts_" + Date.now();
+  const script = document.createElement("script");
+  window[cbName] = (data) => {
+    delete window[cbName];
+    if (script.parentNode) script.parentNode.removeChild(script);
+    if (data && data.ok) {
+      tsData = {};
+      (data.rows || []).forEach(r => {
+        if (r.key && r.value !== undefined) tsData[r.key] = r.value;
+      });
+    }
+    renderTimesheetView();
+  };
+  const sep = apiUrl.includes("?") ? "&" : "?";
+  script.src = apiUrl + sep + new URLSearchParams({ callback: cbName, action: "readTimesheet", t: Date.now() });
+  document.head.appendChild(script);
+}
+
+function saveTSEntry(dateStr, employee, value) {
+  const key = dateStr + "_" + employee;
+  if (value) tsData[key] = value;
+  else delete tsData[key];
+  if (!demoMode) apiPost({ action: "saveTimesheet", tskey: key, tsvalue: value || "" });
+  renderTimesheetView();
+}
+
+function renderTimesheetView() {
+  const body = document.getElementById("ts-body");
+  if (!tsCurrentWeekStart) return;
+
+  // Bi-weekly: 2 weeks = 10 working days
+  const weekDays = [];
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(tsCurrentWeekStart);
+    d.setDate(d.getDate() + i);
+    if (d.getDay() !== 0 && d.getDay() !== 6) weekDays.push(d); // skip weekends
+  }
+
+  const wStart = fmtDateShort(weekDays[0]);
+  const wEnd   = fmtDateShort(weekDays[weekDays.length-1]);
+  document.getElementById("ts-week-label").textContent = wStart + " – " + wEnd;
+  document.getElementById("ts-subtitle").textContent   = wStart + " – " + wEnd;
+
+  if (tsCurrentTab === "week") renderTSWeekView(body, weekDays);
+  else renderTSSummaryView(body);
+}
+
+function renderTSWeekView(body, weekDays) {
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const days   = ["Mon","Tue","Wed","Thu","Fri"];
+  const todayStr = fmtDate(new Date());
+  const COL_W = 72; // px per day column
+  const ROW_H = 28; // px per employee row
+  const NAME_W = 160;
+
+  // Header
+  let html = `<div style="display:flex;align-items:flex-end;padding-bottom:4px;border-bottom:1px solid rgba(0,0,0,.08);margin-bottom:4px;position:sticky;top:0;background:#fff;z-index:2">
+    <div style="width:${NAME_W}px;flex-shrink:0;font-size:11px;font-weight:700;color:#6e6e73;padding:0 10px">Employee</div>`;
+
+  weekDays.forEach((d, idx) => {
+    const isToday = fmtDate(d) === todayStr;
+    const isSep   = idx === 4;
+    const weekLbl = idx === 0 ? "WEEK 1" : idx === 5 ? "WEEK 2" : "";
+    html += `<div style="width:${COL_W}px;flex-shrink:0;text-align:center;font-size:10px;color:${isToday?"#7c3aed":"#6e6e73"};${isSep?"border-right:2px solid rgba(0,0,0,.15);margin-right:2px;":""}padding-bottom:2px">
+      ${weekLbl ? `<div style="font-size:9px;font-weight:800;color:#7c3aed;letter-spacing:.06em;text-transform:uppercase">${weekLbl}</div>` : `<div style="height:11px"></div>`}
+      <div style="font-weight:700">${days[d.getDay()-1]}</div>
+      <div style="font-size:13px;font-weight:${isToday?"800":"600"};color:${isToday?"#7c3aed":"#1a1a1a"}">${d.getDate()}</div>
+      <div style="font-size:9px;color:#aeaeb2">${months[d.getMonth()]}</div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Rows
+  TS_EMPLOYEES.forEach((emp, ei) => {
+    html += `<div style="display:flex;align-items:center;height:${ROW_H}px;${ei%2===0?"background:rgba(0,0,0,.01)":""};border-bottom:1px solid rgba(0,0,0,.04)">
+      <div style="width:${NAME_W}px;flex-shrink:0;font-size:12px;font-weight:600;color:#1a1a1a;padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${emp}</div>`;
+
+    weekDays.forEach((d, idx) => {
+      const dateStr = fmtDate(d);
+      const key = dateStr + "_" + emp;
+      const val = tsData[key] || "";
+      const cls = getTSCellClass(val);
+      const lbl = getTSCellLabel(val);
+      const isSep = idx === 4;
+      const bgMap = { sick:"rgba(255,59,48,.12)", vacation:"rgba(48,209,88,.12)", unpaid:"rgba(255,149,0,.12)", maternity:"rgba(255,45,85,.12)", parthours:"rgba(88,86,214,.12)", empty:"#f4f4f6" };
+      const colMap = { sick:"#c0392b", vacation:"#1a8f3c", unpaid:"#c67b00", maternity:"#a8003c", parthours:"#5856d6", empty:"transparent" };
+      const borderMap = { sick:"rgba(255,59,48,.3)", vacation:"rgba(48,209,88,.3)", unpaid:"rgba(255,149,0,.3)", maternity:"rgba(255,45,85,.3)", parthours:"rgba(88,86,214,.3)", empty:"rgba(0,0,0,.08)" };
+      const empEsc = emp.replace(/'/g, "\'");
+
+      html += `<div style="width:${COL_W}px;flex-shrink:0;padding:0 2px;${isSep?"border-right:2px solid rgba(0,0,0,.15);margin-right:2px;":""}">
+        <div onclick="openTSPopover(event,'${dateStr}','${empEsc}')"
+          style="height:20px;border-radius:4px;background:${bgMap[cls]};border:1px solid ${borderMap[cls]};color:${colMap[cls]};font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;transition:opacity .1s"
+          onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+          ${lbl}
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  body.innerHTML = `<div style="overflow-x:auto"><div style="min-width:${NAME_W + COL_W*10 + 20}px">${html}</div></div>`;
+}
+
+
+function renderTSSummaryView(body) {
+  const now = new Date();
+  const yearStart = new Date(now.getFullYear(), 0, 1);
+  const yearEnd   = new Date(now.getFullYear(), 11, 31);
+
+  // Build per-employee YTD totals
+  const stats = TS_EMPLOYEES.map(emp => {
+    let sick=0, vacation=0, unpaid=0, maternity=0, partHours=0;
+    Object.entries(tsData).forEach(([k, v]) => {
+      if (!k.includes("_" + emp)) return;
+      const cls = getTSCellClass(v);
+      if (cls === "sick")      sick++;
+      else if (cls === "vacation")  vacation++;
+      else if (cls === "unpaid")    unpaid++;
+      else if (cls === "maternity") maternity++;
+      else if (cls === "parthours") partHours++;
+    });
+    return { emp, sick, vacation, unpaid, maternity, partHours, total: sick+vacation+unpaid+maternity+partHours };
+  }).filter(s => s.total > 0 || true);
+
+  let html = `<div style="margin-bottom:1rem">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aeaeb2;margin-bottom:10px">Year-to-Date Summary — ${now.getFullYear()}</div>
+    <div style="border:1px solid rgba(0,0,0,.07);border-radius:14px;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:#f9f9fb">
+            <th style="text-align:left;padding:10px 14px;font-size:11px;font-weight:700;color:#6e6e73;text-transform:uppercase;letter-spacing:.04em">Employee</th>
+            <th style="text-align:center;padding:10px 8px;font-size:11px;font-weight:700;color:#c0392b;text-transform:uppercase;letter-spacing:.04em">Sick</th>
+            <th style="text-align:center;padding:10px 8px;font-size:11px;font-weight:700;color:#1a8f3c;text-transform:uppercase;letter-spacing:.04em">Vacation</th>
+            <th style="text-align:center;padding:10px 8px;font-size:11px;font-weight:700;color:#c67b00;text-transform:uppercase;letter-spacing:.04em">Unpaid</th>
+            <th style="text-align:center;padding:10px 8px;font-size:11px;font-weight:700;color:#a8003c;text-transform:uppercase;letter-spacing:.04em">Maternity</th>
+            <th style="text-align:center;padding:10px 8px;font-size:11px;font-weight:700;color:#5856d6;text-transform:uppercase;letter-spacing:.04em">Part Hrs</th>
+            <th style="text-align:center;padding:10px 8px;font-size:11px;font-weight:700;color:#1a1a1a;text-transform:uppercase;letter-spacing:.04em">Total</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+  stats.forEach((s, i) => {
+    const bg = i%2===0 ? "#fff" : "#fafafa";
+    const badge = (n, cls) => n > 0
+      ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;font-weight:700;font-size:13px" class="ts-cell ${cls}">${n}</span>`
+      : `<span style="color:#d0d0d0;font-size:12px">—</span>`;
+
+    html += `<tr style="background:${bg};border-top:1px solid rgba(0,0,0,.05)">
+      <td style="padding:10px 14px;font-weight:600;color:#1a1a1a">${s.emp}</td>
+      <td style="text-align:center;padding:8px">${badge(s.sick,"sick")}</td>
+      <td style="text-align:center;padding:8px">${badge(s.vacation,"vacation")}</td>
+      <td style="text-align:center;padding:8px">${badge(s.unpaid,"unpaid")}</td>
+      <td style="text-align:center;padding:8px">${badge(s.maternity,"maternity")}</td>
+      <td style="text-align:center;padding:8px">${badge(s.partHours,"parthours")}</td>
+      <td style="text-align:center;padding:8px;font-weight:700;font-size:14px;color:${s.total>5?"#c0392b":s.total>2?"#c67b00":"#1a1a1a"}">${s.total}</td>
+    </tr>`;
+  });
+
+  html += `</tbody></table></div></div>`;
+  body.innerHTML = html;
+}
+
+function openTSPopover(event, dateStr, employee) {
+  event.stopPropagation();
+  const pop = document.getElementById("ts-popover");
+  const key = dateStr + "_" + employee;
+  const cur = tsData[key] || "";
+
+  document.getElementById("ts-pop-title").textContent = employee.split(" ")[0] + " — " + dateStr;
+
+  const opts = document.getElementById("ts-pop-options");
+  opts.innerHTML = TS_TYPES.map(t => {
+    const isCur = t.key === cur || (t.key === "" && !cur);
+    return `<button onclick="saveTSEntry('${dateStr}','${employee.replace(/'/g,"\'")}','${t.key}');document.getElementById('ts-popover').style.display='none'"
+      style="width:100%;padding:8px 12px;border-radius:8px;border:1.5px solid ${isCur?"#7c3aed":"rgba(0,0,0,.08)"};background:${isCur?"rgba(124,58,237,.08)":"#fff"};cursor:pointer;font-size:13px;font-weight:${isCur?"700":"500"};color:${isCur?"#7c3aed":"#1a1a1a"};font-family:inherit;text-align:left">${t.label}</button>`;
+  }).join("");
+
+  // Position popover near the click
+  const x = Math.min(event.clientX, window.innerWidth - 220);
+  const y = Math.min(event.clientY + 8, window.innerHeight - 300);
+  pop.style.left = x + "px";
+  pop.style.top  = y + "px";
+  pop.style.display = "block";
+
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener("click", function handler() {
+      pop.style.display = "none";
+      document.removeEventListener("click", handler);
+    }, { once: true });
+  }, 10);
+}
+
+// Close popover on Escape
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") document.getElementById("ts-popover").style.display = "none";
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
+
+// ── TIMESHEET EXCEL EXPORT ───────────────────────────────────────────────────
+function exportTimesheetXLSX() {
+  if (!tsCurrentWeekStart) { showToast("Open the timesheet first", "error"); return; }
+
+  // Build weekdays for current bi-weekly period
+  const weekDays = [];
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(tsCurrentWeekStart);
+    d.setDate(d.getDate() + i);
+    if (d.getDay() !== 0 && d.getDay() !== 6) weekDays.push(d);
+  }
+
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const days   = ["Mon","Tue","Wed","Thu","Fri"];
+
+  // Period label
+  const p1 = weekDays[0], p2 = weekDays[weekDays.length-1];
+  const periodLabel = months[p1.getMonth()] + " " + p1.getDate() + " – " + months[p2.getMonth()] + " " + p2.getDate() + ", " + p2.getFullYear();
+
+  const wb = XLSX.utils.book_new();
+
+  // ── Build worksheet data ──
+  const wsData = [];
+
+  // Company header
+  wsData.push(["Cancar Media"]);
+  wsData.push(["5905 Transcanadienne"]);
+  wsData.push(["Saint-Laurent, Québec H4T 1A1"]);
+  wsData.push(["Canada"]);
+  wsData.push([]);
+  wsData.push(["Time Sheet"]);
+  wsData.push([]);
+  wsData.push(["Timeframe"]);
+  wsData.push(["Bi-Weekly: " + periodLabel]);
+  wsData.push([]);
+
+  // Week 1 header row
+  const week1Dates = weekDays.slice(0, 5);
+  const week2Dates = weekDays.slice(5, 10);
+
+  wsData.push(["", "Week 1", ...week1Dates.map(d => days[d.getDay()-1])]);
+  wsData.push(["", "", ...week1Dates.map(d => months[d.getMonth()] + " " + d.getDate())]);
+
+  // Week 1 employee rows
+  TS_EMPLOYEES.forEach(emp => {
+    const row = ["", emp];
+    week1Dates.forEach(d => {
+      const key = fmtDate(d) + "_" + emp;
+      row.push(tsData[key] || "");
+    });
+    wsData.push(row);
+  });
+
+  wsData.push([]);
+
+  // Week 2 header row
+  wsData.push(["", "Week 2", ...week2Dates.map(d => days[d.getDay()-1])]);
+  wsData.push(["", "", ...week2Dates.map(d => months[d.getMonth()] + " " + d.getDate())]);
+
+  // Week 2 employee rows
+  TS_EMPLOYEES.forEach(emp => {
+    const row = ["", emp];
+    week2Dates.forEach(d => {
+      const key = fmtDate(d) + "_" + emp;
+      row.push(tsData[key] || "");
+    });
+    wsData.push(row);
+  });
+
+  // ── Styling with openpyxl-style approach via SheetJS ──
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Column widths
+  ws["!cols"] = [
+    { wch: 2 },   // A - spacer
+    { wch: 24 },  // B - employee name
+    { wch: 16 },  // C-G - weekdays
+    { wch: 16 },
+    { wch: 16 },
+    { wch: 16 },
+    { wch: 16 },
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, "Timesheet");
+
+  // ── Summary sheet ──
+  const summaryData = [["Employee", "Sick Days", "Vacation", "Unpaid Day Off", "Maternity Leave", "Part Hours", "Total Absences"]];
+  TS_EMPLOYEES.forEach(emp => {
+    let sick=0, vacation=0, unpaid=0, maternity=0, partHours=0;
+    Object.entries(tsData).forEach(([k, v]) => {
+      if (!k.includes("_" + emp)) return;
+      const cls = getTSCellClass(v);
+      if (cls === "sick")       sick++;
+      else if (cls === "vacation")   vacation++;
+      else if (cls === "unpaid")     unpaid++;
+      else if (cls === "maternity")  maternity++;
+      else if (cls === "parthours")  partHours++;
+    });
+    summaryData.push([emp, sick, vacation, unpaid, maternity, partHours, sick+vacation+unpaid+maternity+partHours]);
+  });
+
+  const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+  wsSummary["!cols"] = [{ wch: 24 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 16 }, { wch: 12 }, { wch: 16 }];
+  XLSX.utils.book_append_sheet(wb, wsSummary, "YTD Summary");
+
+  // ── Download ──
+  const fileName = "Timesheet_" + months[p1.getMonth()] + p1.getDate() + "-" + months[p2.getMonth()] + p2.getDate() + "_" + p2.getFullYear() + ".xlsx";
+  XLSX.writeFile(wb, fileName);
+  showToast("✅ Timesheet exported: " + fileName, "");
+}
+// ─────────────────────────────────────────────────────────────────────────────
 </script>
 
 
@@ -4637,5 +5148,200 @@ function deletePrintRecord(id) {
 
 <!-- Hidden print wrapper -->
 <div id="print-document-wrapper" style="display:none"></div>
+
+<!-- ══ TIMESHEET PANEL ══════════════════════════════════════════════════════ -->
+<div id="ts-overlay" onclick="closeTimesheetPanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:159;backdrop-filter:blur(4px);"></div>
+<div class="ts-panel" id="ts-panel">
+  <div class="perf-panel-header">
+    <div class="perf-panel-title">
+      <div style="width:36px;height:36px;background:rgba(124,58,237,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#7c3aed;font-size:18px"><i class="ti ti-calendar-stats"></i></div>
+      <div><h2>Timesheet</h2><span id="ts-subtitle">Loading…</span></div>
+    </div>
+    <button class="perf-close" onclick="closeTimesheetPanel()"><i class="ti ti-x"></i></button>
+  </div>
+
+  <!-- Controls bar -->
+  <div style="padding:.75rem 1.5rem;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex-shrink:0;background:#fafafa">
+    <!-- Week navigation -->
+    <button onclick="tsNavWeek(-1)" style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(0,0,0,.1);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1a1a1a"><i class="ti ti-chevron-left"></i></button>
+    <span id="ts-week-label" style="font-size:13px;font-weight:700;color:#1a1a1a;min-width:160px;text-align:center"></span>
+    <button onclick="tsNavWeek(1)" style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(0,0,0,.1);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1a1a1a"><i class="ti ti-chevron-right"></i></button>
+    <button onclick="tsGoToday()" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(0,0,0,.1);background:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;color:#7c3aed">Today</button>
+    <button onclick="exportTimesheetXLSX()" style="padding:6px 14px;border-radius:8px;border:none;background:#7c3aed;color:#fff;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;display:flex;align-items:center;gap:5px"><i class="ti ti-file-spreadsheet"></i> Export Excel</button>
+
+    <div style="flex:1"></div>
+
+    <!-- Legend -->
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#c0392b"><span style="width:10px;height:10px;border-radius:3px;background:rgba(255,59,48,.2);display:inline-block"></span>Sick</span>
+      <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#1a8f3c"><span style="width:10px;height:10px;border-radius:3px;background:rgba(48,209,88,.2);display:inline-block"></span>Vacation</span>
+      <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#c67b00"><span style="width:10px;height:10px;border-radius:3px;background:rgba(255,149,0,.2);display:inline-block"></span>Unpaid</span>
+      <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#a8003c"><span style="width:10px;height:10px;border-radius:3px;background:rgba(255,45,85,.2);display:inline-block"></span>Maternity</span>
+      <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#5856d6"><span style="width:10px;height:10px;border-radius:3px;background:rgba(88,86,214,.2);display:inline-block"></span>Part Hours</span>
+    </div>
+  </div>
+
+  <!-- Body: grid + summary tabs -->
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+    <!-- Tab switcher -->
+    <div style="display:flex;border-bottom:1px solid rgba(0,0,0,.07);flex-shrink:0;padding:0 1.5rem;background:#fff">
+      <button id="ts-tab-week" onclick="tsSwitchTab('week')" style="padding:10px 16px;border:none;border-bottom:2.5px solid #7c3aed;background:none;cursor:pointer;font-size:13px;font-weight:700;color:#7c3aed;font-family:inherit">Weekly View</button>
+      <button id="ts-tab-summary" onclick="tsSwitchTab('summary')" style="padding:10px 16px;border:none;border-bottom:2.5px solid transparent;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#aeaeb2;font-family:inherit">Employee Summary</button>
+    </div>
+
+    <!-- Content area -->
+    <div id="ts-body" style="flex:1;overflow:auto;padding:1rem 1.5rem"></div>
+  </div>
+</div>
+
+<!-- Cell editor popover -->
+<div id="ts-popover" style="display:none;position:fixed;z-index:400;background:#fff;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,.2);border:1px solid rgba(0,0,0,.1);padding:.75rem;min-width:200px">
+  <div style="font-size:11px;font-weight:700;color:#aeaeb2;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px" id="ts-pop-title">Set status</div>
+  <div style="display:flex;flex-direction:column;gap:5px" id="ts-pop-options"></div>
+  <button onclick="document.getElementById('ts-popover').style.display='none'" style="width:100%;margin-top:8px;padding:7px;border-radius:8px;border:1px solid rgba(0,0,0,.1);background:#fff;cursor:pointer;font-size:12px;font-weight:600;color:#6e6e73;font-family:inherit">Cancel</button>
+</div>
+
+<!-- ══ REMINDERS OVERLAY ══════════════════════════════════════════════════ -->
+<div class="reminders-overlay" id="reminders-overlay" onclick="if(event.target===this)closeRemindersModal()">
+  <div class="reminders-modal">
+    <div style="padding:1.25rem 1.5rem;border-bottom:1px solid rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#A51C30,transparent)"></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;background:rgba(165,28,48,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#A51C30;font-size:18px"><i class="ti ti-bell"></i></div>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:#1a1a1a">Reminders</div>
+          <div style="font-size:12px;color:#aeaeb2">Your upcoming reminders</div>
+        </div>
+      </div>
+      <button onclick="closeRemindersModal()" style="background:rgba(0,0,0,.05);border:none;border-radius:999px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6e6e73;font-size:15px"><i class="ti ti-x"></i></button>
+    </div>
+
+    <!-- Add reminder form -->
+    <div style="padding:1rem 1.5rem;border-bottom:1px solid rgba(0,0,0,.06);flex-shrink:0">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="reminder-text" type="text" placeholder="Reminder note…" onkeydown="if(event.key==='Enter')addReminder()"
+          style="flex:1;min-width:160px;padding:9px 12px;border:1.5px solid rgba(0,0,0,.1);border-radius:10px;font-size:13px;font-family:inherit;outline:none;color:#1a1a1a">
+        <input id="reminder-date" type="date"
+          style="padding:9px 12px;border:1.5px solid rgba(0,0,0,.1);border-radius:10px;font-size:13px;font-family:inherit;outline:none;color:#1a1a1a">
+        <button onclick="addReminder()" style="padding:9px 18px;border-radius:10px;border:none;background:#A51C30;color:#fff;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;white-space:nowrap">
+          <i class="ti ti-plus"></i> Add
+        </button>
+      </div>
+    </div>
+
+    <!-- Reminders list -->
+    <div id="reminders-list" style="flex:1;overflow-y:auto;padding:1rem 1.5rem"></div>
+
+    <div style="padding:.75rem 1.5rem;border-top:1px solid rgba(0,0,0,.06);flex-shrink:0;display:flex;justify-content:flex-end">
+      <button onclick="closeRemindersModal()" style="padding:8px 20px;border-radius:980px;border:1.5px solid rgba(0,0,0,.1);background:#fff;color:#6e6e73;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FOOTER ══════════════════════════════════════════════════════════════ -->
+<footer class="gg-footer" id="gg-footer" style="display:none">
+  <div class="footer-grid">
+
+    <div>
+      <div class="footer-group-title">Audi</div>
+      <a class="footer-link" href="https://www.audianjou.com/" target="_blank">Audi Anjou</a>
+      <a class="footer-link" href="https://www.audistlaurent.ca/" target="_blank">Audi St-Laurent</a>
+      <a class="footer-link" href="https://www.audi3rivieres.com/" target="_blank">Audi Trois-Rivières</a>
+      <a class="footer-link" href="https://www.audiwestisland.com/" target="_blank">Audi West-Island</a>
+    </div>
+
+    <div>
+      <div class="footer-group-title">BMW & Moto</div>
+      <a class="footer-link" href="https://www.bmwwestisland.ca/" target="_blank">BMW West Island</a>
+      <a class="footer-link" href="https://www.gabrielbmwmoto.com/" target="_blank">BMW Moto Gabriel</a>
+      <a class="footer-link" href="https://www.gabrielharleydavidsonmtl.com/" target="_blank">Gabriel Harley-Davidson</a>
+      <div class="footer-group-title" style="margin-top:10px">Acura & Genesis</div>
+      <a class="footer-link" href="https://www.acuragabriel.com/" target="_blank">Acura Gabriel West-Island</a>
+      <a class="footer-link" href="https://www.genesisdelouest.ca/" target="_blank">Genesis West Island</a>
+    </div>
+
+    <div>
+      <div class="footer-group-title">Hyundai</div>
+      <a class="footer-link" href="https://www.hyundaigabrielanjou.com/" target="_blank">Hyundai Gabriel Anjou</a>
+      <a class="footer-link" href="https://www.hyundaielectrifiegabriel.com/" target="_blank">Hyundai Électrifié</a>
+      <a class="footer-link" href="https://www.hyundaigabrielouest.com/" target="_blank">Hyundai Gabriel Ouest</a>
+      <a class="footer-link" href="https://www.hyundaigabrielpat.com/" target="_blank">Hyundai Gabriel P.A.T.</a>
+      <a class="footer-link" href="https://www.hyundaigabrielstjacques.com/" target="_blank">Hyundai Gabriel St-Jacques</a>
+    </div>
+
+    <div>
+      <div class="footer-group-title">Infiniti & Kia</div>
+      <a class="footer-link" href="https://infinitigabrieljeantalon.com/" target="_blank">Infiniti Jean-Talon</a>
+      <a class="footer-link" href="https://infinitigabrielstleonard.com/" target="_blank">Infiniti St-Léonard</a>
+      <a class="footer-link" href="https://www.kiagabrielnord.com/" target="_blank">Kia Gabriel Nord</a>
+      <a class="footer-link" href="https://www.kiagabrielouest.com/" target="_blank">Kia Gabriel Ouest</a>
+      <div class="footer-group-title" style="margin-top:10px">Honda & Ford</div>
+      <a class="footer-link" href="https://www.hondagabriel.com/" target="_blank">Honda Gabriel</a>
+      <a class="footer-link" href="http://www.fordgabriel.com/" target="_blank">Ford Gabriel</a>
+    </div>
+
+    <div>
+      <div class="footer-group-title">Jaguar / Land Rover</div>
+      <a class="footer-link" href="https://www.jaguarwestisland.ca/" target="_blank">Jaguar West Island</a>
+      <a class="footer-link" href="https://www.landroverwestisland.ca/" target="_blank">Land Rover West Island</a>
+      <div class="footer-group-title" style="margin-top:10px">Jeep & Lincoln</div>
+      <a class="footer-link" href="https://jeepchryslergabriel.ca/" target="_blank">Jeep Chrysler Gabriel</a>
+      <a class="footer-link" href="https://www.lincolngabriel.com/" target="_blank">Lincoln Gabriel</a>
+    </div>
+
+    <div>
+      <div class="footer-group-title">Lexus</div>
+      <a class="footer-link" href="https://www.lexusgabrielbrossard.com/" target="_blank">Lexus Gabriel Brossard</a>
+      <a class="footer-link" href="https://www.lexusgabrielstlaurent.com/" target="_blank">Lexus Gabriel St-Laurent</a>
+      <div class="footer-group-title" style="margin-top:10px">Mazda</div>
+      <a class="footer-link" href="https://www.mazdagabrielanjou.com/" target="_blank">Mazda Gabriel Anjou</a>
+      <a class="footer-link" href="http://mazdagabrielplateau.com/" target="_blank">Mazda Gabriel Plateau</a>
+      <a class="footer-link" href="https://www.mazdagabrielstjacques.com/" target="_blank">Mazda Gabriel St-Jacques</a>
+      <a class="footer-link" href="https://www.mazdagabrielstlaurent.com/" target="_blank">Mazda Gabriel St-Laurent</a>
+    </div>
+
+    <div>
+      <div class="footer-group-title">Nissan</div>
+      <a class="footer-link" href="https://www.nissangabrielanjou.com/" target="_blank">Nissan Gabriel Anjou</a>
+      <a class="footer-link" href="https://www.nissangabrieljeantalon.com/" target="_blank">Nissan Gabriel Jean-Talon</a>
+      <a class="footer-link" href="https://www.nissangabrielpat.com/" target="_blank">Nissan Gabriel P.A.T.</a>
+      <a class="footer-link" href="https://www.nissangabrielstconstant.com/" target="_blank">Nissan Gabriel St-Constant</a>
+      <a class="footer-link" href="https://www.nissangabrielstjacques.com/" target="_blank">Nissan Gabriel St-Jacques</a>
+      <a class="footer-link" href="https://www.nissangabrielstleonard.com/" target="_blank">Nissan Gabriel St-Léonard</a>
+    </div>
+
+    <div>
+      <div class="footer-group-title">Porsche</div>
+      <a class="footer-link" href="https://www.porscheprestige.com/" target="_blank">Porsche Prestige</a>
+      <a class="footer-link" href="https://www.porschewestisland.com/" target="_blank">Porsche West Island</a>
+      <div class="footer-group-title" style="margin-top:10px">Toyota</div>
+      <a class="footer-link" href="https://www.toyotagabrielcentreville.com/" target="_blank">Toyota Centre-Ville</a>
+      <a class="footer-link" href="https://www.toyotagabrielstlaurent.com/" target="_blank">Toyota Gabriel St-Laurent</a>
+    </div>
+
+    <div>
+      <div class="footer-group-title">Volkswagen</div>
+      <a class="footer-link" href="https://vwcentreville.com/" target="_blank">VW Centre Ville</a>
+      <a class="footer-link" href="https://www.vwchateauguay.com/" target="_blank">VW Gabriel Chateauguay</a>
+      <a class="footer-link" href="https://www.vwgabrielstconstant.com/" target="_blank">VW Gabriel St-Constant</a>
+      <a class="footer-link" href="https://www.vwgabrielstlaurent.com/" target="_blank">VW Gabriel St-Laurent</a>
+    </div>
+
+    <div>
+      <div class="footer-group-title">Automobile Gabriel</div>
+      <a class="footer-link" href="https://automobilegabrielest.com/" target="_blank">Automobile Gabriel Est</a>
+      <a class="footer-link" href="https://automobilegabriel.com/" target="_blank">Automobile Gabriel St-Laurent</a>
+      <div class="footer-group-title" style="margin-top:10px">Services</div>
+      <a class="footer-link" href="https://www.liquidationgabriel.ca/" target="_blank">Liquidation Gabriel</a>
+      <a class="footer-link" href="https://www.autosolutioncredit.ca/" target="_blank">Solution Crédit Auto</a>
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">
+    <span class="footer-logo-text">GROUPE GABRIEL — Marketing Tracker</span>
+    <span style="font-size:11px;color:#d0d0d0">© 2026</span>
+  </div>
+</footer>
 </body>
 </html>
