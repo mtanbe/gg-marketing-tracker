@@ -139,7 +139,7 @@ pre { font-family:var(--mono); font-size:11px; color:var(--text2); white-space:p
 
 /* ── STATS ── */
 .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:1.75rem; }
-.stat-card { background:rgba(255,255,255,0.82); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.95); border-radius:var(--radius-lg); padding:1.1rem 1.25rem; box-shadow:var(--shadow); display:flex; align-items:center; gap:14px; transition:all .2s; }
+.stat-card { background:rgba(255,255,255,0.95); border:1px solid rgba(255,255,255,0.95); border-radius:var(--radius-lg); padding:1.1rem 1.25rem; box-shadow:var(--shadow); display:flex; align-items:center; gap:14px; transition:all .2s; }
 .stat-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
 .stat-icon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
 .stat-icon.total { background:rgba(0,0,0,.05); color:var(--text2); }
@@ -162,8 +162,8 @@ select:focus { border-color:var(--red); box-shadow:0 0 0 3px var(--red-glow); }
 select:hover { background-color:#fff; border-color:rgba(0,0,0,.15); }
 
 /* ── PROJECT CARDS ── */
-.proj-list { display:flex; flex-direction:column; gap:8px; }
-.proj-card { background:rgba(255,255,255,0.82); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.95); border-radius:var(--radius-lg); overflow:hidden; transition:all .25s cubic-bezier(.4,0,.2,1); box-shadow:0 2px 8px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04); }
+.proj-list { display:flex; flex-direction:column; gap:8px; will-change:transform; }
+.proj-card { background:rgba(255,255,255,0.95); border:1px solid rgba(255,255,255,0.95); border-radius:var(--radius-lg); overflow:hidden; transition:all .25s cubic-bezier(.4,0,.2,1); box-shadow:0 2px 8px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04); }
 .proj-card:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,0,0,.1), 0 2px 6px rgba(0,0,0,.05); border-color:rgba(255,255,255,1); }
 .proj-card.expanded { border-color:rgba(165,28,48,.2); box-shadow:0 8px 28px rgba(165,28,48,.08), 0 2px 6px rgba(0,0,0,.05); }
 .proj-header { display:flex; align-items:center; gap:12px; padding:15px 18px; cursor:pointer; user-select:none; }
@@ -189,7 +189,7 @@ select:hover { background-color:#fff; border-color:rgba(0,0,0,.15); }
 .day-label { font-size:11px; color:var(--text3); font-family:var(--mono); }
 
 /* ── EXPANDED DETAIL ── */
-.proj-detail { display:none; border-top:1px solid rgba(0,0,0,.05); padding:16px 18px; background:rgba(250,250,252,.6); }
+.proj-detail { display:none; border-top:1px solid rgba(0,0,0,.05); padding:16px 18px; background:rgba(250,250,252,1); }
 .proj-detail.open { display:block; }
 .pipeline { display:flex; margin-bottom:16px; border-radius:10px; overflow:hidden; border:1px solid rgba(0,0,0,.07); }
 .pipe-step { flex:1; padding:7px 3px; text-align:center; font-size:10px; font-weight:600; background:rgba(255,255,255,.6); color:var(--text3); border-right:1px solid rgba(0,0,0,.06); text-transform:uppercase; letter-spacing:.04em; transition:all .2s; }
@@ -277,7 +277,7 @@ select:hover { background-color:#fff; border-color:rgba(0,0,0,.15); }
 .perf-section-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text3); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
 .perf-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
 .designer-cards { display:flex; flex-direction:column; gap:12px; margin-bottom:1.75rem; }
-.designer-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.1rem 1.25rem; transition:all .2s; box-shadow:var(--shadow-sm); }
+.designer-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.1rem 1.25rem; transition:transform .2s,box-shadow .2s; box-shadow:var(--shadow-sm); }
 .designer-card:hover { box-shadow:var(--shadow); transform:translateY(-1px); }
 .dc-top { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
 .dc-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--red),var(--red2)); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(165,28,48,.3); }
@@ -575,6 +575,7 @@ select:hover { background-color:#fff; border-color:rgba(0,0,0,.15); }
 
 /* ── MANAGEMENT HUB ── */
 .mgmt-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:500; display:none; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+body.mgmt-open { overflow:hidden !important; }
 .mgmt-overlay.show { display:flex; }
 
 /* Password screen */
@@ -592,7 +593,7 @@ select:hover { background-color:#fff; border-color:rgba(0,0,0,.15); }
 .mgmt-cancel-btn:hover { color:var(--text2); background:rgba(0,0,0,.04); }
 
 /* Management hub panel */
-.mgmt-hub { background:rgba(255,255,255,.97); border-radius:24px; padding:0; max-width:440px; width:100%; box-shadow:0 32px 80px rgba(0,0,0,.18); animation:reminderCardIn .4s cubic-bezier(.34,1.56,.64,1); overflow:hidden; }
+.mgmt-hub { background:rgba(255,255,255,.97); border-radius:24px; padding:0; max-width:440px; width:100%; height:85vh; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 32px 80px rgba(0,0,0,.18); animation:reminderCardIn .4s cubic-bezier(.34,1.56,.64,1); overflow:hidden; }
 .mgmt-hub-header { padding:1.5rem 1.75rem 1.25rem; border-bottom:1px solid rgba(0,0,0,.06); position:relative; }
 .mgmt-hub-header::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg,transparent,var(--red),transparent); }
 .mgmt-hub-title { display:flex; align-items:center; gap:12px; }
@@ -601,7 +602,7 @@ select:hover { background-color:#fff; border-color:rgba(0,0,0,.15); }
 .mgmt-hub-title p { font-size:12px; color:var(--text3); margin-top:2px; }
 .mgmt-close-btn { position:absolute; top:1.25rem; right:1.25rem; background:rgba(0,0,0,.05); border:none; border-radius:999px; width:32px; height:32px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text2); font-size:16px; transition:all .15s; }
 .mgmt-close-btn:hover { background:rgba(0,0,0,.1); color:var(--text); }
-.mgmt-hub-body { padding:1.25rem 1.75rem 1.75rem; display:flex; flex-direction:column; gap:10px; }
+.mgmt-hub-body { padding:1.25rem 1.75rem 1.75rem; display:flex; flex-direction:column; gap:10px; overflow-y:auto; flex:1; }
 .mgmt-section-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text3); margin-bottom:2px; margin-top:6px; }
 .mgmt-action { display:flex; align-items:center; gap:14px; padding:1rem 1.25rem; background:rgba(0,0,0,.025); border:1px solid rgba(0,0,0,.07); border-radius:16px; cursor:pointer; transition:all .2s; text-align:left; width:100%; font-family:var(--font); }
 .mgmt-action:hover { background:rgba(255,255,255,.9); border-color:rgba(0,0,0,.12); transform:translateX(3px); box-shadow:0 4px 16px rgba(0,0,0,.07); }
@@ -669,6 +670,218 @@ select:hover { background-color:#fff; border-color:rgba(0,0,0,.15); }
 .footer-link:hover { color:#A51C30; }
 .footer-bottom { border-top:1px solid rgba(0,0,0,.06); padding-top:1rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
 .footer-logo-text { font-size:11px; font-weight:700; color:#aeaeb2; letter-spacing:.04em; }
+/* ══════════════════════════════════════════════════════════════════════════
+   DARK MODE — Complete redesign
+   Strategy: Override CSS variables so all var(--text), var(--surface) etc.
+   automatically pick up dark values. Then handle hardcoded inline colors
+   only via the JS applyTheme function which stores/restores originals.
+   Light mode is NEVER touched.
+══════════════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --text:    #f5f5f7;
+  --text2:   #aeaeb2;
+  --text3:   #6e6e73;
+  --surface: rgba(255,255,255,0.06);
+  --surface2:rgba(255,255,255,0.04);
+  --surface3:rgba(255,255,255,0.025);
+  --border:  rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.1);
+  --red-light: rgba(165,28,48,0.15);
+  --shadow:  0 2px 20px rgba(0,0,0,0.5);
+  --shadow-lg:0 8px 40px rgba(0,0,0,0.6);
+}
+
+/* Base */
+[data-theme="dark"] body { background:#0d0d0f; color:#f5f5f7; }
+
+/* Cards */
+[data-theme="dark"] .card {
+  background:rgba(255,255,255,.04) !important;
+  border-color:rgba(255,255,255,.08) !important;
+  box-shadow:0 2px 20px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+[data-theme="dark"] .card:hover {
+  background:rgba(255,255,255,.07) !important;
+  box-shadow:0 4px 30px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.07) !important;
+}
+
+/* Stat cards */
+[data-theme="dark"] .stat-card {
+  background:rgba(255,255,255,.05) !important;
+  border-color:rgba(255,255,255,.08) !important;
+  box-shadow:0 2px 12px rgba(0,0,0,.4) !important;
+}
+
+/* Project cards */
+[data-theme="dark"] .proj-card {
+  background:rgba(255,255,255,.05) !important;
+  border-color:rgba(255,255,255,.08) !important;
+  box-shadow:0 2px 12px rgba(0,0,0,.4) !important;
+}
+[data-theme="dark"] .proj-card:hover {
+  background:rgba(255,255,255,.08) !important;
+  box-shadow:0 6px 24px rgba(0,0,0,.5) !important;
+}
+[data-theme="dark"] .proj-detail {
+  background:rgba(255,255,255,.03) !important;
+  border-top-color:rgba(255,255,255,.06) !important;
+}
+[data-theme="dark"] .proj-name { color:#f5f5f7 !important; }
+
+/* Topbar */
+[data-theme="dark"] .topbar {
+  background:rgba(18,18,20,.95) !important;
+  border-bottom-color:rgba(255,255,255,.08) !important;
+}
+[data-theme="dark"] #identity-name-label { color:#f5f5f7 !important; }
+
+/* Buttons */
+[data-theme="dark"] .icon-btn {
+  background:rgba(255,255,255,.07) !important;
+  border-color:rgba(255,255,255,.1) !important;
+  color:#f5f5f7 !important;
+}
+
+/* Inputs & selects */
+[data-theme="dark"] input:not([type=checkbox]),
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background:#1c1c1e !important;
+  color:#f5f5f7 !important;
+  border-color:rgba(255,255,255,.12) !important;
+}
+[data-theme="dark"] input::placeholder { color:#6e6e73 !important; }
+
+/* Slide-in panels */
+[data-theme="dark"] .mgmt-panel,
+[data-theme="dark"] .perf-panel,
+[data-theme="dark"] .social-panel,
+[data-theme="dark"] .print-panel,
+[data-theme="dark"] .ts-panel {
+  background:rgba(18,18,20,.98) !important;
+  border-left-color:rgba(255,255,255,.07) !important;
+  box-shadow:-12px 0 60px rgba(0,0,0,.6) !important;
+}
+
+/* Print panel — left form area */
+[data-theme="dark"] #print-panel > div { background:rgba(18,18,20,.98) !important; }
+[data-theme="dark"] #print-panel label { color:#aeaeb2 !important; }
+[data-theme="dark"] #print-panel .perf-panel-header { background:rgba(18,18,20,.98) !important; }
+[data-theme="dark"] #print-panel .perf-panel-header h2 { color:#f5f5f7 !important; }
+[data-theme="dark"] #print-panel .perf-panel-header span { color:#8e8e93 !important; }
+
+/* Left sidebar form */
+[data-theme="dark"] #print-panel > div > div:first-child { background:#111113 !important; border-right-color:rgba(255,255,255,.07) !important; }
+
+/* Revenue section */
+[data-theme="dark"] #print-revenue-content > div { background:rgba(255,255,255,.04) !important; border-color:rgba(255,255,255,.07) !important; }
+[data-theme="dark"] #pi-price-box { background:rgba(3,105,161,.15) !important; border-color:rgba(3,105,161,.3) !important; }
+
+/* Print panel form labels and text */
+[data-theme="dark"] #print-panel [style*="color:#aeaeb2"],
+[data-theme="dark"] #print-panel [style*="color: #aeaeb2"] { color:#6e6e73 !important; }
+[data-theme="dark"] #print-panel [style*="color:#1a1a1a"],
+[data-theme="dark"] #print-panel [style*="color: #1a1a1a"] { color:#f5f5f7 !important; }
+[data-theme="dark"] #print-panel [style*="color:#6e6e73"],
+[data-theme="dark"] #print-panel [style*="color: #6e6e73"] { color:#8e8e93 !important; }
+[data-theme="dark"] #print-panel [style*="background:#fff"],
+[data-theme="dark"] #print-panel [style*="background: #fff"] { background:rgba(255,255,255,.06) !important; }
+[data-theme="dark"] #print-panel [style*="background:#fafafa"],
+[data-theme="dark"] #print-panel [style*="background: #fafafa"] { background:#111113 !important; }
+[data-theme="dark"] #print-panel [style*="background:#f0f9ff"] { background:rgba(3,105,161,.12) !important; }
+[data-theme="dark"] #print-panel [style*="border:1px solid rgba(0,0,0"] { border-color:rgba(255,255,255,.08) !important; }
+[data-theme="dark"] #print-panel [style*="border-top:1px solid rgba(0,0,0"] { border-top-color:rgba(255,255,255,.07) !important; }
+[data-theme="dark"] #print-panel [style*="border-bottom:1px solid rgba(0,0,0"] { border-bottom-color:rgba(255,255,255,.07) !important; }
+
+/* NEVER darken the print document paper */
+[data-theme="dark"] #print-document { background:#fff !important; color:#1a1a1a !important; }
+[data-theme="dark"] #print-document * { color:#1a1a1a !important; background:transparent; }
+[data-theme="dark"] #print-document table td { border-color:#000 !important; background:#f9f9f9 !important; }
+[data-theme="dark"] #print-document table td:last-child { background:#fff !important; }
+[data-theme="dark"] .toast {
+  background:rgba(30,30,32,.97) !important;
+  border-color:rgba(255,255,255,.1) !important;
+  color:#f5f5f7 !important;
+  box-shadow:0 8px 32px rgba(0,0,0,.5) !important;
+}
+
+[data-theme="dark"] .mgmt-hub {
+  background:rgba(22,22,24,.98) !important;
+  box-shadow:0 32px 80px rgba(0,0,0,.6) !important;
+}
+[data-theme="dark"] .mgmt-lock {
+  background:rgba(22,22,24,.98) !important;
+  box-shadow:0 32px 80px rgba(0,0,0,.6) !important;
+}
+[data-theme="dark"] .mgmt-section-title { color:#f5f5f7 !important; }
+
+/* Panel headers */
+[data-theme="dark"] .perf-panel-header {
+  background:rgba(18,18,20,.98) !important;
+  border-bottom-color:rgba(255,255,255,.07) !important;
+}
+[data-theme="dark"] .designer-card {
+  background:rgba(255,255,255,.05) !important;
+  border-color:rgba(255,255,255,.08) !important;
+  box-shadow:0 2px 12px rgba(0,0,0,.4) !important;
+}
+[data-theme="dark"] .dc-metric {
+  background:rgba(255,255,255,.06) !important;
+}
+[data-theme="dark"] .dc-bar-track {
+  background:rgba(255,255,255,.1) !important;
+}
+[data-theme="dark"] .dc-active-list .dc-active-item {
+  border-bottom-color:rgba(255,255,255,.06) !important;
+}
+
+/* Management actions */
+[data-theme="dark"] .mgmt-action {
+  background:rgba(255,255,255,.04) !important;
+  border-color:rgba(255,255,255,.07) !important;
+}
+[data-theme="dark"] .mgmt-action:hover { background:rgba(255,255,255,.08) !important; }
+
+/* Chips */
+[data-theme="dark"] .d-chip {
+  background:rgba(255,255,255,.07) !important;
+  border-color:rgba(255,255,255,.1) !important;
+}
+[data-theme="dark"] .d-chip.selected { background:#A51C30 !important; color:#fff !important; }
+[data-theme="dark"] .multi-chip-options label {
+  background:rgba(255,255,255,.06) !important;
+  border-color:rgba(255,255,255,.1) !important;
+}
+[data-theme="dark"] .multi-chip-options label.selected { background:#A51C30 !important; color:#fff !important; }
+
+/* Social posts */
+[data-theme="dark"] .soc-post { background:rgba(255,255,255,.04) !important; border-color:rgba(255,255,255,.07) !important; }
+
+/* Timesheet cells */
+[data-theme="dark"] .ts-cell.empty { background:rgba(255,255,255,.04) !important; border-color:rgba(255,255,255,.07) !important; }
+[data-theme="dark"] .ts-controls-bar { background:rgba(255,255,255,.03) !important; border-bottom-color:rgba(255,255,255,.07) !important; }
+
+/* Modals & overlays */
+[data-theme="dark"] .modal-box,
+[data-theme="dark"] .reminders-modal,
+[data-theme="dark"] .identity-card {
+  background:rgba(22,22,24,.98) !important;
+  border-color:rgba(255,255,255,.08) !important;
+  box-shadow:0 20px 80px rgba(0,0,0,.7) !important;
+}
+
+/* Footer */
+[data-theme="dark"] .gg-footer { background:rgba(255,255,255,.02) !important; border-top-color:rgba(255,255,255,.06) !important; }
+[data-theme="dark"] .footer-group-title { color:#A51C30 !important; }
+
+/* Logo */
+[data-theme="dark"] img[src*="data:image/png;base64"] { background:#fff; border-radius:10px; padding:6px 12px; box-sizing:border-box; }
+
+.dark-toggle { position:fixed; bottom:24px; right:24px; z-index:500; width:52px; height:30px; border-radius:15px; border:none; cursor:pointer; background:#e5e5ea; transition:background .25s; padding:0; display:flex; align-items:center; box-shadow:0 2px 12px rgba(0,0,0,.2); }
+.dark-toggle.on { background:#A51C30; }
+.dark-toggle-thumb { width:24px; height:24px; border-radius:50%; background:#fff; margin-left:3px; transition:transform .25s; display:flex; align-items:center; justify-content:center; font-size:13px; box-shadow:0 1px 4px rgba(0,0,0,.25); }
+.dark-toggle.on .dark-toggle-thumb { transform:translateX(22px); }
+
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -1360,7 +1573,7 @@ function apiPost(payload) {
     } else if (payload.action === "archiveProjects") {
       src += "&action=archiveProjects&ids=" + encodeURIComponent(payload.ids) + "&rows=" + encodeURIComponent(payload.rows);
     } else if (payload.action === "push") {
-      src += "&action=push&msg=" + encodeURIComponent(payload.msg || "");
+      src += "&action=push&msg=" + encodeURIComponent(payload.msg || "") + "&target=" + encodeURIComponent(payload.target || "all");
     } else if (payload.action === "draft") {
       src += "&action=draft&to=" + encodeURIComponent(payload.to||"") + "&cc=" + encodeURIComponent(payload.cc||"") + "&subject=" + encodeURIComponent(payload.subject||"") + "&body=" + encodeURIComponent(payload.body||"");
     } else {
@@ -1662,6 +1875,7 @@ let currentPerfTab = "designers";
 function openPerf() {
   document.getElementById("perf-overlay").classList.add("open");
   document.getElementById("perf-panel").classList.add("open");
+  setTimeout(() => fixDarkModeText(document.getElementById("perf-panel")), 50);
   switchPerfTab("designers");
 }
 function closePerf() {
@@ -2008,36 +2222,45 @@ function openReportsModal() {
   const overlay = document.createElement("div");
   overlay.id = "reports-overlay";
   overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:250;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(8px)";
+  const isDarkReports = document.documentElement.getAttribute("data-theme") === "dark";
+  const rTxt1  = isDarkReports ? "#f5f5f7" : "#1a1a1a";
+  const rTxt2  = isDarkReports ? "#8e8e93" : "#6e6e73";
+  const rBg    = isDarkReports ? "rgba(22,22,24,.98)" : "#fff";
+  const rBord  = isDarkReports ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.08)";
+  const rDiv   = isDarkReports ? "rgba(255,255,255,.07)" : "rgba(0,0,0,.07)";
+  const rBtnBg = isDarkReports ? "rgba(255,255,255,.07)" : "rgba(0,0,0,.05)";
+  const rInBg  = isDarkReports ? "rgba(255,255,255,.04)" : "rgba(0,0,0,.02)";
+  const rInBord= isDarkReports ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.08)";
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.15);width:100%;max-width:460px;display:flex;flex-direction:column;border:1px solid rgba(0,0,0,.08);overflow:hidden">
-      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between;position:relative">
+    <div style="background:${rBg};border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.4);width:100%;max-width:460px;display:flex;flex-direction:column;border:1px solid ${rBord};overflow:hidden">
+      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid ${rDiv};display:flex;align-items:center;justify-content:space-between;position:relative">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#A51C30,transparent)"></div>
         <div style="display:flex;align-items:center;gap:10px">
           <div style="width:38px;height:38px;background:rgba(165,28,48,.08);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#A51C30;font-size:18px"><i class="ti ti-file-report"></i></div>
           <div>
-            <div style="font-size:16px;font-weight:700;color:#1a1a1a;letter-spacing:-0.02em">Monthly Reports</div>
-            <div style="font-size:12px;color:#aeaeb2">Generating for <strong style="color:#6e6e73">${monthLabel}</strong></div>
+            <div style="font-size:16px;font-weight:700;color:${rTxt1};letter-spacing:-0.02em">Monthly Reports</div>
+            <div style="font-size:12px;color:#aeaeb2">Generating for <strong style="color:${rTxt2}">${monthLabel}</strong></div>
           </div>
         </div>
-        <button onclick="document.getElementById('reports-overlay').remove()" style="background:rgba(0,0,0,.05);border:none;border-radius:999px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6e6e73;font-size:15px"><i class="ti ti-x"></i></button>
+        <button onclick="document.getElementById('reports-overlay').remove()" style="background:${rBtnBg};border:none;border-radius:999px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:${rTxt2};font-size:15px"><i class="ti ti-x"></i></button>
       </div>
-      <div style="padding:1.25rem 1.5rem">
-        <p style="font-size:13px;color:#6e6e73;line-height:1.6;margin-bottom:1.25rem">Select the account manager to generate their monthly report drafts:</p>
+      <div style="padding:1.25rem 1.5rem;background:${rBg}">
+        <p style="font-size:13px;color:${rTxt2};line-height:1.6;margin-bottom:1.25rem">Select the account manager to generate their monthly report drafts:</p>
         <div style="display:flex;flex-direction:column;gap:8px">
 
-          <button onclick="launchReportsInClaude('michel')" style="display:flex;align-items:center;gap:14px;padding:.9rem 1.1rem;background:rgba(0,0,0,.02);border:1.5px solid rgba(0,0,0,.08);border-radius:14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:all .18s" onmouseover="this.style.borderColor='#A51C30';this.style.background='#fff';this.style.boxShadow='0 4px 16px rgba(165,28,48,.1)'" onmouseout="this.style.borderColor='rgba(0,0,0,.08)';this.style.background='rgba(0,0,0,.02)';this.style.boxShadow='none'">
+          <button onclick="launchReportsInClaude('michel')" style="display:flex;align-items:center;gap:14px;padding:.9rem 1.1rem;background:${rInBg};border:1.5px solid ${rInBord};border-radius:14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:all .18s" onmouseover="this.style.borderColor='#A51C30';this.style.boxShadow='0 4px 16px rgba(165,28,48,.1)'" onmouseout="this.style.borderColor='${rInBord}';this.style.boxShadow='none'">
             <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#A51C30,#c0263d);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(165,28,48,.3)">MT</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:14px;font-weight:600;color:#1a1a1a;letter-spacing:-0.01em">Michel Tanbe</div>
+              <div style="font-size:14px;font-weight:600;color:${rTxt1};letter-spacing:-0.01em">Michel Tanbe</div>
               <div style="font-size:11px;color:#aeaeb2;margin-top:2px">13 dealerships · Audi, Infiniti, Jaguar, Land Rover, Lexus, Porsche, Jeep</div>
             </div>
             <i class="ti ti-chevron-right" style="color:#aeaeb2;font-size:15px;flex-shrink:0"></i>
           </button>
 
-          <button onclick="launchReportsInClaude('karam')" style="display:flex;align-items:center;gap:14px;padding:.9rem 1.1rem;background:rgba(0,0,0,.02);border:1.5px solid rgba(0,0,0,.08);border-radius:14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:all .18s" onmouseover="this.style.borderColor='#0071e3';this.style.background='#fff';this.style.boxShadow='0 4px 16px rgba(0,113,227,.1)'" onmouseout="this.style.borderColor='rgba(0,0,0,.08)';this.style.background='rgba(0,0,0,.02)';this.style.boxShadow='none'">
+          <button onclick="launchReportsInClaude('karam')" style="display:flex;align-items:center;gap:14px;padding:.9rem 1.1rem;background:${rInBg};border:1.5px solid ${rInBord};border-radius:14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:all .18s" onmouseover="this.style.borderColor='#0071e3';this.style.boxShadow='0 4px 16px rgba(0,113,227,.1)'" onmouseout="this.style.borderColor='${rInBord}';this.style.boxShadow='none'">
             <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(29,78,216,.3)">KM</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:14px;font-weight:600;color:#1a1a1a;letter-spacing:-0.01em">Karam Merjanian</div>
+              <div style="font-size:14px;font-weight:600;color:${rTxt1};letter-spacing:-0.01em">Karam Merjanian</div>
               <div style="font-size:11px;color:#aeaeb2;margin-top:2px">11 dealerships · Nissan, Kia, Honda, Toyota</div>
             </div>
             <i class="ti ti-chevron-right" style="color:#aeaeb2;font-size:15px;flex-shrink:0"></i>
@@ -2046,15 +2269,15 @@ function openReportsModal() {
           <div style="display:flex;align-items:center;gap:14px;padding:.9rem 1.1rem;background:rgba(0,0,0,.02);border:1.5px solid rgba(0,0,0,.06);border-radius:14px;opacity:0.4;cursor:not-allowed">
             <div style="width:42px;height:42px;border-radius:50%;background:#d0d0d3;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">SA</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:14px;font-weight:600;color:#6e6e73;display:flex;align-items:center;gap:8px;letter-spacing:-0.01em">Shems Abdelkefi <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#aeaeb2;background:#e5e5ea;padding:2px 8px;border-radius:999px">Coming soon</span></div>
+              <div style="font-size:14px;font-weight:600;color:${rTxt2};display:flex;align-items:center;gap:8px;letter-spacing:-0.01em">Shems Abdelkefi <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#aeaeb2;background:#e5e5ea;padding:2px 8px;border-radius:999px">Coming soon</span></div>
               <div style="font-size:11px;color:#c7c7cc;margin-top:2px">BMW, Hyundai, Mazda, Volkswagen, Ford, Lincoln, Genesis, Acura</div>
             </div>
           </div>
 
         </div>
       </div>
-      <div style="padding:.9rem 1.5rem;border-top:1px solid rgba(0,0,0,.06);display:flex;justify-content:flex-end">
-        <button onclick="document.getElementById('reports-overlay').remove()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:980px;border:1.5px solid rgba(0,0,0,.1);background:#fff;color:#6e6e73;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">Cancel</button>
+      <div style="padding:.9rem 1.5rem;border-top:1px solid ${rDiv};background:${rBg};display:flex;justify-content:flex-end">
+        <button onclick="document.getElementById('reports-overlay').remove()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:980px;border:1.5px solid ${rBord};background:${rInBg};color:${rTxt2};cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">Cancel</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -2440,9 +2663,23 @@ function openMgmt() {
     return;
   }
   document.getElementById("mgmt-overlay").classList.add("show");
+  document.body.classList.add("mgmt-open");
+  // Redirect wheel scroll to hub body, prevent page scroll
+  const overlay = document.getElementById("mgmt-overlay");
+  if (!overlay._wheelBound) {
+    overlay._wheelBound = true;
+    overlay.addEventListener("wheel", function(e) {
+      e.preventDefault();
+      const body = document.querySelector(".mgmt-hub-body");
+      if (body) body.scrollTop += e.deltaY;
+    }, { passive: false });
+  }
   if (mgmtUnlocked) {
     document.getElementById("mgmt-lock").style.display = "none";
-    document.getElementById("mgmt-hub").style.display = "block";
+    const _mh = document.getElementById("mgmt-hub");
+    _mh.style.display = "flex";
+    _mh.style.flexDirection = "column";
+    _mh.style.height = Math.min(window.innerHeight * 0.85, 700) + "px";
   } else {
     document.getElementById("mgmt-lock").style.display = "block";
     document.getElementById("mgmt-hub").style.display = "none";
@@ -2454,6 +2691,7 @@ function openMgmt() {
 
 function closeMgmt() {
   document.getElementById("mgmt-overlay").classList.remove("show");
+  document.body.classList.remove("mgmt-open");
   document.getElementById("mgmt-push-area").classList.remove("show");
   document.getElementById("push-arrow").style.transform = "";
 }
@@ -2465,7 +2703,10 @@ async function verifyMgmtPin() {
   if (pinHash === MGMT_PASSWORD_HASH) {
     mgmtUnlocked = true;
     document.getElementById("mgmt-lock").style.display = "none";
-    document.getElementById("mgmt-hub").style.display = "block";
+    const _mh = document.getElementById("mgmt-hub");
+    _mh.style.display = "flex";
+    _mh.style.flexDirection = "column";
+    _mh.style.height = Math.min(window.innerHeight * 0.85, 700) + "px";
     errEl.textContent = "";
   } else {
     errEl.textContent = "Incorrect code. Please try again.";
@@ -2542,7 +2783,8 @@ function checkTeamPush() {
     }
   };
   const sep = apiUrl.includes("?") ? "&" : "?";
-  script.src = apiUrl + sep + "callback=" + cbName + "&action=getpush&since=" + lastPushCheck + "&t=" + Date.now();
+  const pushUser = encodeURIComponent(currentUser || "all");
+  script.src = apiUrl + sep + "callback=" + cbName + "&action=getpush&since=" + lastPushCheck + "&user=" + pushUser + "&t=" + Date.now();
   document.head.appendChild(script);
 }
 setInterval(checkTeamPush, 20000);
@@ -2591,32 +2833,44 @@ function openPromoModal() {
   const overlay = document.createElement("div");
   overlay.id = "promo-overlay";
   overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:250;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(8px)";
+  const isDarkPromo = document.documentElement.getAttribute("data-theme") === "dark";
+  const pNameTxt  = isDarkPromo ? "#f5f5f7" : "#1a1a1a";
+  const pNameTxt2 = isDarkPromo ? "#8e8e93" : "#6e6e73";
+  const pBg    = isDarkPromo ? "rgba(22,22,24,.98)" : "#fff";
+  const pBord  = isDarkPromo ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.08)";
+  const pDiv   = isDarkPromo ? "rgba(255,255,255,.07)" : "rgba(0,0,0,.07)";
+  const pTxt1  = isDarkPromo ? "#f5f5f7" : "#1a1a1a";
+  const pTxt2  = isDarkPromo ? "#8e8e93" : "#6e6e73";
+  const pInBg  = isDarkPromo ? "#2c2c2e" : "#fff";
+  const pInBord= isDarkPromo ? "rgba(255,255,255,.1)" : "rgba(0,0,0,.1)";
+  const pBtnBg = isDarkPromo ? "rgba(255,255,255,.07)" : "rgba(0,0,0,.05)";
+  const pBodyBg= isDarkPromo ? "rgba(18,18,20,.98)" : "#fff";
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.15);width:100%;max-width:500px;display:flex;flex-direction:column;border:1px solid rgba(0,0,0,.08);overflow:hidden">
-      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between;position:relative">
+    <div style="background:${pBg};border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.4);width:100%;max-width:500px;display:flex;flex-direction:column;border:1px solid ${pBord};overflow:hidden">
+      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid ${pDiv};display:flex;align-items:center;justify-content:space-between;position:relative">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#1a8f3c,transparent)"></div>
         <div style="display:flex;align-items:center;gap:10px">
           <div style="width:38px;height:38px;background:rgba(48,209,88,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#1a8f3c;font-size:18px"><i class="ti ti-table-plus"></i></div>
           <div>
-            <div style="font-size:16px;font-weight:700;color:#1a1a1a;letter-spacing:-0.02em">Monthly Promotion Sheets</div>
+            <div style="font-size:16px;font-weight:700;color:${pTxt1};letter-spacing:-0.02em">Monthly Promotion Sheets</div>
             <div style="font-size:12px;color:#aeaeb2">Select the month to prepare</div>
           </div>
         </div>
-        <button onclick="document.getElementById('promo-overlay').remove()" style="background:rgba(0,0,0,.05);border:none;border-radius:999px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6e6e73;font-size:15px"><i class="ti ti-x"></i></button>
+        <button onclick="document.getElementById('promo-overlay').remove()" style="background:${pBtnBg};border:none;border-radius:999px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:${pTxt2};font-size:15px"><i class="ti ti-x"></i></button>
       </div>
-      <div style="padding:1.25rem 1.5rem">
+      <div style="padding:1.25rem 1.5rem;background:${pBodyBg}">
 
         <!-- Month + Year selector — stacked to avoid cropping -->
         <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.5rem">
           <div>
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aeaeb2;margin-bottom:6px">Month</div>
-            <select id="promo-month" style="width:100%;padding:14px 44px 14px 16px;height:52px;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;font-size:15px;font-weight:600;color:#1a1a1a;background:#fff;outline:none;cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2 4l4 4 4-4%22 fill=%22none%22 stroke=%22%23aeaeb2%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 16px center">
+            <select id="promo-month" style="width:100%;padding:14px 44px 14px 16px;height:52px;border:1.5px solid ${pInBord};border-radius:12px;font-size:15px;font-weight:600;color:${pTxt1};background:${pInBg};outline:none;cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2 4l4 4 4-4%22 fill=%22none%22 stroke=%22%23aeaeb2%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 16px center">
               ${monthOptions}
             </select>
           </div>
           <div>
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aeaeb2;margin-bottom:6px">Year</div>
-            <select id="promo-year" style="width:100%;padding:14px 44px 14px 16px;height:52px;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;font-size:15px;font-weight:600;color:#1a1a1a;background:#fff;outline:none;cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2 4l4 4 4-4%22 fill=%22none%22 stroke=%22%23aeaeb2%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 16px center">
+            <select id="promo-year" style="width:100%;padding:14px 44px 14px 16px;height:52px;border:1.5px solid ${pInBord};border-radius:12px;font-size:15px;font-weight:600;color:${pTxt1};background:${pInBg};outline:none;cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2 4l4 4 4-4%22 fill=%22none%22 stroke=%22%23aeaeb2%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 16px center">
               <option value="${currentYear}" selected>${currentYear}</option>
               <option value="${currentYear+1}">${currentYear+1}</option>
             </select>
@@ -2631,7 +2885,7 @@ function openPromoModal() {
           <button onclick="confirmPromo('michel')" style="display:flex;align-items:center;gap:12px;padding:.8rem 1rem;background:rgba(0,0,0,.02);border:1.5px solid rgba(0,0,0,.08);border-radius:14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:all .15s" onmouseover="this.style.borderColor='#1a8f3c';this.style.background='#fff'" onmouseout="this.style.borderColor='rgba(0,0,0,.08)';this.style.background='rgba(0,0,0,.02)'">
             <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#A51C30,#c0263d);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">MT</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:600;color:#1a1a1a">Michel Tanbe</div>
+              <div style="font-size:13px;font-weight:600;color:${pNameTxt}">Michel Tanbe</div>
               <div style="font-size:11px;color:#aeaeb2;margin-top:1px">Lexus, JLR, Infiniti, Jeep — 4 sheets</div>
             </div>
             <i class="ti ti-chevron-right" style="color:#aeaeb2;font-size:14px;flex-shrink:0"></i>
@@ -2641,7 +2895,7 @@ function openPromoModal() {
           <button onclick="confirmPromo('karam')" style="display:flex;align-items:center;gap:12px;padding:.8rem 1rem;background:rgba(0,0,0,.02);border:1.5px solid rgba(0,0,0,.08);border-radius:14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:all .15s" onmouseover="this.style.borderColor='#1a8f3c';this.style.background='#fff'" onmouseout="this.style.borderColor='rgba(0,0,0,.08)';this.style.background='rgba(0,0,0,.02)'">
             <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(29,78,216,.3)">KM</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:600;color:#1a1a1a">Karam Merjanian</div>
+              <div style="font-size:13px;font-weight:600;color:${pNameTxt}">Karam Merjanian</div>
               <div style="font-size:11px;color:#aeaeb2;margin-top:1px">Nissan, Honda, Kia, Toyota — 4 sheets</div>
             </div>
             <i class="ti ti-chevron-right" style="color:#aeaeb2;font-size:14px;flex-shrink:0"></i>
@@ -2651,7 +2905,7 @@ function openPromoModal() {
           <div style="display:flex;align-items:center;gap:12px;padding:.8rem 1rem;background:rgba(0,0,0,.02);border:1.5px solid rgba(0,0,0,.06);border-radius:14px;opacity:0.4;cursor:not-allowed">
             <div style="width:38px;height:38px;border-radius:50%;background:#d0d0d3;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">SA</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:600;color:#6e6e73;display:flex;align-items:center;gap:7px">Shems Abdelkefi <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#aeaeb2;background:#e5e5ea;padding:2px 8px;border-radius:999px">Coming soon</span></div>
+              <div style="font-size:13px;font-weight:600;color:${pNameTxt2};display:flex;align-items:center;gap:7px">Shems Abdelkefi <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#aeaeb2;background:#e5e5ea;padding:2px 8px;border-radius:999px">Coming soon</span></div>
               <div style="font-size:11px;color:#c7c7cc;margin-top:1px">Not configured yet</div>
             </div>
           </div>
@@ -3611,27 +3865,35 @@ function openBudgetSyncModal() {
   const overlay = document.createElement("div");
   overlay.id = "budget-sync-overlay";
   overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(8px)";
+  const isDarkBudget = document.documentElement.getAttribute("data-theme") === "dark";
+  const bModalBg = isDarkBudget ? "rgba(22,22,24,.98)" : "#fff";
+  const bBorder  = isDarkBudget ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.08)";
+  const bDivider = isDarkBudget ? "rgba(255,255,255,.07)" : "rgba(0,0,0,.07)";
+  const bTxt1    = isDarkBudget ? "#f5f5f7" : "#1a1a1a";
+  const bTxt2    = isDarkBudget ? "#8e8e93" : "#6e6e73";
+  const bBtnBg   = isDarkBudget ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.05)";
+  const bCloseBg = isDarkBudget ? "rgba(255,255,255,.06)" : "#fff";
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.15);width:100%;max-width:620px;max-height:90vh;display:flex;flex-direction:column;border:1px solid rgba(0,0,0,.08);overflow:hidden">
-      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative">
+    <div style="background:${bModalBg};border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.4);width:100%;max-width:620px;max-height:90vh;display:flex;flex-direction:column;border:1px solid ${bBorder};overflow:hidden">
+      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid ${bDivider};display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#A51C30,transparent)"></div>
         <div style="display:flex;align-items:center;gap:10px">
           <div style="width:38px;height:38px;background:rgba(165,28,48,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#A51C30;font-size:18px"><i class="ti ti-report-money"></i></div>
-          <div><div style="font-size:16px;font-weight:700;color:#1a1a1a">Budget Reader</div><div style="font-size:12px;color:#aeaeb2">Data as of ${BUDGET_LAST_REFRESH} · 15 brands</div></div>
+          <div><div style="font-size:16px;font-weight:700;color:${bTxt1}">Budget Reader</div><div style="font-size:12px;color:#aeaeb2">Data as of ${BUDGET_LAST_REFRESH} · 15 brands</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <button onclick="document.getElementById('budget-sync-overlay').remove()" style="background:rgba(0,0,0,.05);border:none;border-radius:999px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6e6e73;font-size:15px"><i class="ti ti-x"></i></button>
+          <button onclick="document.getElementById('budget-sync-overlay').remove()" style="background:${bBtnBg};border:none;border-radius:999px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:${bTxt2};font-size:15px"><i class="ti ti-x"></i></button>
         </div>
       </div>
-      <div style="padding:1rem 1.5rem;border-bottom:1px solid rgba(0,0,0,.06);flex-shrink:0;display:flex;gap:10px">
+      <div style="padding:1rem 1.5rem;border-bottom:1px solid ${bDivider};flex-shrink:0;display:flex;gap:10px">
         <div style="flex:1"><div style="font-size:11px;font-weight:700;color:#aeaeb2;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Month</div>
         <select id="sync-month" onchange="renderBudgetResults()" style="${selStyle}">${monthOptions}</select></div>
         <div style="flex:1"><div style="font-size:11px;font-weight:700;color:#aeaeb2;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Brand</div>
         <select id="sync-brand" onchange="renderBudgetResults()" style="${selStyle}">${brandOptions}</select></div>
       </div>
-      <div id="budget-results-area" style="flex:1;overflow-y:auto;padding:1rem 1.5rem"></div>
-      <div style="padding:.75rem 1.5rem;border-top:1px solid rgba(0,0,0,.06);flex-shrink:0;display:flex;justify-content:flex-end">
-        <button onclick="document.getElementById('budget-sync-overlay').remove()" style="padding:8px 20px;border-radius:980px;border:1.5px solid rgba(0,0,0,.1);background:#fff;color:#6e6e73;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">Close</button>
+      <div id="budget-results-area" style="flex:1;overflow-y:auto;padding:1rem 1.5rem;background:${bModalBg}"></div>
+      <div style="padding:.75rem 1.5rem;border-top:1px solid ${bDivider};flex-shrink:0;display:flex;justify-content:flex-end">
+        <button onclick="document.getElementById('budget-sync-overlay').remove()" style="padding:8px 20px;border-radius:980px;border:1.5px solid ${bBorder};background:${bCloseBg};color:${bTxt2};cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">Close</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -3645,20 +3907,26 @@ function renderBudgetResults() {
   const brand     = document.getElementById("sync-brand").value;
   const dealers   = BUDGET_BRANDS[brand] || [];
   const area      = document.getElementById("budget-results-area");
-  let html = `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aeaeb2;margin-bottom:10px">${brand} — ${monthName} 2026</div>`;
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const txt1 = isDark ? "#f5f5f7" : "#1a1a1a";
+  const txt2 = isDark ? "#aeaeb2" : "#6e6e73";
+  const cardBg = isDark ? "rgba(255,255,255,.05)" : "#f9f9fb";
+  const cardBorder = isDark ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.07)";
+  const dividerColor = isDark ? "rgba(255,255,255,.06)" : "rgba(0,0,0,.06)";
+  let html = `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:${txt2};margin-bottom:10px">${brand} — ${monthName} 2026</div>`;
   html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">`;
   for (const dealerName of dealers) {
     const d = BUDGET_DATA[dealerName] && BUDGET_DATA[dealerName][monthKey];
     if (!d) { html += `<div style="background:#f9f9fb;border:1px solid rgba(0,0,0,.07);border-radius:14px;padding:.9rem 1rem;opacity:.5"><div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:6px">${dealerName}</div><div style="font-size:11px;color:#aeaeb2">No data</div></div>`; continue; }
     const total = d.social + d.p7 + d.google;
-    html += `<div style="background:#f9f9fb;border:1px solid rgba(0,0,0,.07);border-radius:14px;padding:.9rem 1rem;">
-      <div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(0,0,0,.06)">${dealerName}</div>
+    html += `<div style="background:${cardBg};border:1px solid ${cardBorder};border-radius:14px;padding:.9rem 1rem;">
+      <div style="font-size:12px;font-weight:700;color:${txt1};margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid ${dividerColor}">${dealerName}</div>
       <div style="display:flex;flex-direction:column;gap:5px">
-        <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:#6e6e73">Social Ads</span><span style="font-size:12px;font-weight:600;color:#1a1a1a">${fmtCAD(d.social)}</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:#6e6e73">P7 / PMAX</span><span style="font-size:12px;font-weight:600;color:#1a1a1a">${fmtCAD(d.p7)}</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:#6e6e73">Google Ads</span><span style="font-size:12px;font-weight:600;color:#1a1a1a">${fmtCAD(d.google)}</span></div>
-        <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid rgba(0,0,0,.06);margin-top:2px">
-          <span style="font-size:11px;font-weight:700;color:#6e6e73">Total Internet</span>
+        <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:${txt2}">Social Ads</span><span style="font-size:12px;font-weight:600;color:${txt1}">${fmtCAD(d.social)}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:${txt2}">P7 / PMAX</span><span style="font-size:12px;font-weight:600;color:${txt1}">${fmtCAD(d.p7)}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:${txt2}">Google Ads</span><span style="font-size:12px;font-weight:600;color:${txt1}">${fmtCAD(d.google)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid ${dividerColor};margin-top:2px">
+          <span style="font-size:11px;font-weight:700;color:${txt2}">Total Internet</span>
           <span style="font-size:13px;font-weight:700;color:#A51C30">${fmtCAD(total)}</span>
         </div>
       </div>
@@ -3827,8 +4095,11 @@ function buildSocialPostCard(p) {
 
   if (status === "Awaiting Review") {
     const thumb = getDriveThumbnail(p.driveLink);
+    const isClaudio = currentUser === "Claudia Al Shemali";
+    const isAM = ["Michel Tanbe","Karam Merjanian","Shems Abdelkefi"].includes(currentUser);
     actions = `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.06)">
       ${thumb ? `<div style="margin-bottom:10px;border-radius:12px;overflow:hidden;max-height:200px;background:#f0f0f0;display:flex;align-items:center;justify-content:center"><img src="${thumb}" style="width:100%;max-height:200px;object-fit:contain;display:block" onerror="this.parentNode.style.display='none'"></div>` : ""}
+      ${(isClaudio || isAM) ? `
       <div style="font-size:11px;font-weight:700;color:#aeaeb2;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Caption — edit if needed then approve</div>
       <textarea id="cap-${p.id}" style="width:100%;padding:8px 12px;border:1.5px solid rgba(0,0,0,.1);border-radius:10px;font-size:12px;font-family:inherit;outline:none;resize:vertical;min-height:70px;box-sizing:border-box;color:#1a1a1a">${p.caption||""}</textarea>
       <div style="display:flex;gap:8px;margin-top:8px">
@@ -3836,20 +4107,22 @@ function buildSocialPostCard(p) {
         <button onclick="approvePost('${p.id}')" style="flex:1;padding:8px 14px;border-radius:10px;border:none;background:#30d158;color:#fff;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
           <i class="ti ti-circle-check"></i> Approve
         </button>
-      </div>
+      </div>` : `<div style="font-size:12px;color:#aeaeb2;text-align:center;padding:.5rem">⏳ Awaiting Claudia's review</div>`}
     </div>`;
   }
 
   if (status === "Approved") {
     const thumb = getDriveThumbnail(p.driveLink);
+    const isAshraf = currentUser === "Ashraf";
+    const isAM2 = ["Michel Tanbe","Karam Merjanian","Shems Abdelkefi"].includes(currentUser);
     actions = `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.06)">
       ${thumb ? `<div style="margin-bottom:10px;border-radius:12px;overflow:hidden;max-height:200px;background:#f0f0f0;display:flex;align-items:center;justify-content:center"><img src="${thumb}" style="width:100%;max-height:200px;object-fit:contain;display:block" onerror="this.parentNode.style.display='none'"></div>` : ""}
-      <div style="display:flex;gap:8px">
+      ${(isAshraf || isAM2) ? `<div style="display:flex;gap:8px">
         ${p.driveLink ? `<a href="${p.driveLink}" target="_blank" style="flex:1;padding:8px 12px;border-radius:10px;border:1.5px solid rgba(0,0,0,.1);background:#fff;color:#1a1a1a;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px"><i class="ti ti-photo"></i> View Photo</a>` : ""}
         <button onclick="publishPost('${p.id}')" style="flex:2;padding:8px 14px;border-radius:10px;border:none;background:#5856d6;color:#fff;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
           <i class="ti ti-rocket"></i> Mark as Published
         </button>
-      </div>
+      </div>` : `<div style="font-size:12px;color:#aeaeb2;text-align:center;padding:.5rem">✅ Approved — waiting for Ashraf to publish</div>`}
     </div>`;
   }
 
@@ -3892,7 +4165,7 @@ function markPhotoReady(id) {
   p.photoReadyAt = new Date().toISOString();
   saveSocialPosts(); syncSocialPost(p); renderSocialPanel();
   showToast("📸 Photo ready! Claudia has been notified", "");
-  if (!demoMode) apiPost({ action: "push", msg: "📸 " + p.dealer + " — '" + (p.title||"New post") + "' photo is ready for caption review!" });
+  if (!demoMode) apiPost({ action: "push", msg: "📸 " + p.dealer + " — '" + (p.title||"New post") + "' photo is ready for caption review!", target: "claudia" });
 }
 
 function approvePost(id) {
@@ -3904,7 +4177,7 @@ function approvePost(id) {
   p.approvedAt = new Date().toISOString();
   saveSocialPosts(); syncSocialPost(p); renderSocialPanel();
   showToast("✅ Caption approved! Ashraf has been notified", "");
-  if (!demoMode) apiPost({ action: "push", msg: "✅ " + p.dealer + " — '" + (p.title||"Post") + "' is approved and ready to publish!" });
+  if (!demoMode) apiPost({ action: "push", msg: "✅ " + p.dealer + " — '" + (p.title||"Post") + "' is approved and ready to publish!", target: "ashraf" });
 }
 
 function publishPost(id) {
@@ -3936,18 +4209,26 @@ function openNewSocialPost(existing = null) {
   const designerOpts = `<option value="">— unassigned —</option>` + SOC_DESIGNERS.map(d => `<option value="${d}" ${existing&&existing.designer===d?"selected":""}>${d}</option>`).join("");
   const selectStyle = "width:100%;padding:12px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;font-size:13px;font-family:inherit;outline:none;background:#fff;-webkit-appearance:none;color:#1a1a1a;height:46px;box-sizing:border-box";
 
+  const isDarkSoc = document.documentElement.getAttribute("data-theme") === "dark";
+  const sBg    = isDarkSoc ? "rgba(22,22,24,.98)" : "#fff";
+  const sBord  = isDarkSoc ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.08)";
+  const sDivid = isDarkSoc ? "rgba(255,255,255,.07)" : "rgba(0,0,0,.07)";
+  const sTxt1  = isDarkSoc ? "#f5f5f7" : "#1a1a1a";
+  const sTxt2  = isDarkSoc ? "#8e8e93" : "#6e6e73";
+  const sBtnBg = isDarkSoc ? "rgba(255,255,255,.07)" : "rgba(0,0,0,.05)";
+  const sInBg  = isDarkSoc ? "#2c2c2e" : "#fff";
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.15);width:100%;max-width:520px;overflow:hidden;border:1px solid rgba(0,0,0,.08)">
-      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between;position:relative">
+    <div style="background:${sBg};border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.4);width:100%;max-width:520px;overflow:hidden;border:1px solid ${sBord}">
+      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid ${sDivid};display:flex;align-items:center;justify-content:space-between;position:relative">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#5856d6,transparent)"></div>
-        <div style="font-size:16px;font-weight:700;color:#1a1a1a">${existing ? "Edit Post" : "New Social Post"}</div>
-        <button onclick="document.getElementById('soc-modal-overlay').remove()" style="background:rgba(0,0,0,.05);border:none;border-radius:999px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6e6e73"><i class="ti ti-x"></i></button>
+        <div style="font-size:16px;font-weight:700;color:${sTxt1}">${existing ? "Edit Post" : "New Social Post"}</div>
+        <button onclick="document.getElementById('soc-modal-overlay').remove()" style="background:${sBtnBg};border:none;border-radius:999px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:${sTxt2}"><i class="ti ti-x"></i></button>
       </div>
-      <div style="padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:12px;max-height:70vh;overflow-y:auto">
+      <div style="padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:12px;max-height:70vh;overflow-y:auto;background:${sBg}">
         <div>
           <div style="font-size:11px;font-weight:700;color:#aeaeb2;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Post Title</div>
           <input id="soc-title" type="text" placeholder="e.g. Porsche Summer Campaign" value="${existing?existing.title||"":""}"
-            style="width:100%;padding:10px 12px;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;color:#1a1a1a">
+            style="width:100%;padding:10px 12px;border:1.5px solid ${sBord};border-radius:12px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;color:${sTxt1};background:${sInBg}">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div>
@@ -3976,8 +4257,8 @@ function openNewSocialPost(existing = null) {
             style="width:100%;padding:10px 12px;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;color:#1a1a1a">
         </div>` : ""}
       </div>
-      <div style="padding:.9rem 1.5rem;border-top:1px solid rgba(0,0,0,.06);display:flex;justify-content:space-between;gap:10px">
-        <button onclick="document.getElementById('soc-modal-overlay').remove()" style="padding:9px 20px;border-radius:980px;border:1.5px solid rgba(0,0,0,.1);background:#fff;color:#6e6e73;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit">Cancel</button>
+      <div style="padding:.9rem 1.5rem;border-top:1px solid ${sDivid};display:flex;justify-content:space-between;gap:10px;background:${sBg}">
+        <button onclick="document.getElementById('soc-modal-overlay').remove()" style="padding:9px 20px;border-radius:980px;border:1.5px solid ${sBord};background:${sBtnBg};color:${sTxt2};cursor:pointer;font-size:13px;font-weight:600;font-family:inherit">Cancel</button>
         <button onclick="saveSocialPost('${existing?existing.id:""}')" style="padding:9px 24px;border-radius:980px;border:none;background:#5856d6;color:#fff;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit"><i class="ti ti-check"></i> ${existing ? "Save" : "Create Post"}</button>
       </div>
     </div>`;
@@ -4065,11 +4346,12 @@ const PRINT_PRICES = {
 
 function openPrintPanel() {
   document.getElementById("print-panel").classList.add("open");
+  setTimeout(() => fixDarkModeText(document.getElementById("print-panel")), 50);
   document.getElementById("print-overlay").style.display = "block";
 
   // Populate dealer dropdown
   const sel = document.getElementById("pi-dealer");
-  const allDealers = [...new Set(Object.values(ACCOUNTS).flat())].sort();
+  const allDealers = [...new Set([...Object.values(ACCOUNTS).flat(), "Groupe Gabriel", "Liquidation Gabriel"])].sort();
   sel.innerHTML = '<option value="">— Select dealership —</option>' +
     allDealers.map(d => `<option value="${d}">${d}</option>`).join("");
 
@@ -4417,6 +4699,7 @@ function fmtDateShort(d) {
 
 function openTimesheetPanel() {
   document.getElementById("ts-panel").classList.add("open");
+  setTimeout(() => fixDarkModeText(document.getElementById("ts-panel")), 50);
   document.getElementById("ts-overlay").style.display = "block";
   if (!tsCurrentWeekStart) tsCurrentWeekStart = getMondayOfWeek(new Date());
   loadTimesheetData();
@@ -4498,6 +4781,7 @@ function renderTimesheetView() {
 
   if (tsCurrentTab === "week") renderTSWeekView(body, weekDays);
   else renderTSSummaryView(body);
+  setTimeout(() => fixDarkModeText(document.getElementById("ts-panel")), 30);
 }
 
 function renderTSWeekView(body, weekDays) {
@@ -4763,6 +5047,110 @@ function exportTimesheetXLSX() {
   XLSX.writeFile(wb, fileName);
   showToast("✅ Timesheet exported: " + fileName, "");
 }
+// ─────────────────────────────────────────────────────────────────────────────
+
+
+// ── DARK MODE ────────────────────────────────────────────────────────────────
+function initDarkMode() {
+  const saved = localStorage.getItem("gg_theme") || "light";
+  applyTheme(saved);
+}
+
+function toggleDarkMode() {
+  const current = document.documentElement.getAttribute("data-theme") || "light";
+  const next = current === "dark" ? "light" : "dark";
+  applyTheme(next);
+  localStorage.setItem("gg_theme", next);
+}
+
+function fixDarkModeText(container) {
+  if (!container || document.documentElement.getAttribute("data-theme") !== "dark") return;
+  container.querySelectorAll('*').forEach(el => {
+    if (!el.style) return;
+    const c = el.style.color;
+    if (c === '#1a1a1a' || c === 'rgb(26, 26, 26)') { if (!el.getAttribute('data-dc')) { el.setAttribute('data-dc', c); el.style.color = '#f5f5f7'; } }
+    else if (c === '#6e6e73' || c === 'rgb(110, 110, 115)') { if (!el.getAttribute('data-dc')) { el.setAttribute('data-dc', c); el.style.color = '#8e8e93'; } }
+    else if (c === '#aeaeb2' || c === 'rgb(174, 174, 178)') { if (!el.getAttribute('data-dc')) { el.setAttribute('data-dc', c); el.style.color = '#636366'; } }
+    const bg = el.style.background || el.style.backgroundColor;
+    if ((bg === 'rgb(255, 255, 255)' || bg === '#fff' || bg === 'white') && el.tagName !== 'BUTTON' && el.tagName !== 'INPUT' && el.tagName !== 'SELECT' && !el.classList.contains('ts-cell') && !el.classList.contains('d-chip')) {
+      if (!el.getAttribute('data-dbg')) { el.setAttribute('data-dbg', el.style.background); el.style.background = 'rgba(255,255,255,0.05)'; }
+    }
+    if ((bg === 'rgb(249, 249, 251)' || bg === '#f9f9fb' || bg === 'rgba(0, 0, 0, 0.02)') && !el.getAttribute('data-dbg')) {
+      el.setAttribute('data-dbg', el.style.background); el.style.background = 'rgba(255,255,255,0.03)';
+    }
+  });
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const dark = theme === "dark";
+  const btn   = document.getElementById("dark-toggle");
+  const thumb = document.getElementById("dark-toggle-thumb");
+  if (btn)   btn.classList.toggle("on", dark);
+  if (thumb) thumb.textContent = dark ? "☀️" : "🌙";
+
+  // ── Topbar inline-styled buttons ──────────────────────────────────────────
+  const topbar = document.querySelector(".topbar");
+  if (topbar) {
+    topbar.style.background = dark ? "rgba(18,18,20,.95)" : "";
+    topbar.querySelectorAll(".icon-btn").forEach(el => {
+      el.style.background   = dark ? "rgba(255,255,255,.07)" : "";
+      el.style.borderColor  = dark ? "rgba(255,255,255,.1)"  : "";
+      el.style.color        = dark ? "#f5f5f7" : "";
+    });
+  }
+
+  // ── Background pattern ─────────────────────────────────────────────────────
+  let darkBg = document.getElementById("gg-dark-bg");
+  if (dark) {
+    document.body.style.background = "#0d0d0f";
+    if (!darkBg) {
+      darkBg = document.createElement("div");
+      darkBg.id = "gg-dark-bg";
+      darkBg.style.cssText = "position:fixed;inset:0;z-index:-1;pointer-events:none;background:#0d0d0f";
+      const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+      svg.setAttribute("width","100%"); svg.setAttribute("height","100%");
+      svg.style.cssText = "position:absolute;inset:0";
+      svg.innerHTML = `
+        <circle cx="5%" cy="8%" r="8%" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.2"/>
+        <circle cx="5%" cy="8%" r="12%" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.8"/>
+        <circle cx="5%" cy="8%" r="16%" fill="none" stroke="rgba(255,255,255,0.025)" stroke-width="0.6"/>
+        <circle cx="5%" cy="8%" r="20%" fill="none" stroke="rgba(255,255,255,0.015)" stroke-width="0.4"/>
+        <circle cx="95%" cy="92%" r="8%" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.2"/>
+        <circle cx="95%" cy="92%" r="12%" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.8"/>
+        <circle cx="95%" cy="92%" r="16%" fill="none" stroke="rgba(255,255,255,0.025)" stroke-width="0.6"/>
+        <circle cx="100%" cy="48%" r="10%" fill="none" stroke="rgba(255,255,255,0.035)" stroke-width="0.8"/>
+        <circle cx="100%" cy="48%" r="14%" fill="none" stroke="rgba(255,255,255,0.02)" stroke-width="0.5"/>
+        <path d="M-5% 30% Q30% 20% 55% 27% T105% 24%" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <path d="M-5% 34% Q30% 24% 55% 31% T105% 28%" fill="none" stroke="rgba(255,255,255,0.025)" stroke-width="1.2"/>
+        <path d="M105% 64% Q70% 74% 45% 67% T-5% 70%" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <circle cx="2%" cy="2%" r="1.5" fill="rgba(255,255,255,0.12)"/>
+        <circle cx="4%" cy="2%" r="1.5" fill="rgba(255,255,255,0.09)"/>
+        <circle cx="6%" cy="2%" r="1.2" fill="rgba(255,255,255,0.07)"/>
+        <circle cx="2%" cy="4.5%" r="1.2" fill="rgba(255,255,255,0.09)"/>
+        <circle cx="4%" cy="4.5%" r="1" fill="rgba(255,255,255,0.07)"/>
+        <circle cx="98%" cy="97%" r="1.5" fill="rgba(255,255,255,0.1)"/>
+        <circle cx="96%" cy="97%" r="1.2" fill="rgba(255,255,255,0.07)"/>
+        <circle cx="98%" cy="94%" r="1" fill="rgba(255,255,255,0.07)"/>
+      `;
+      darkBg.appendChild(svg);
+      document.body.insertBefore(darkBg, document.body.firstChild);
+    }
+    darkBg.style.display = "block";
+
+    // Inject style to fix body::before
+    let s = document.getElementById("gg-dark-style");
+    if (!s) { s = document.createElement("style"); s.id = "gg-dark-style"; document.head.appendChild(s); }
+    s.textContent = "body::before { background:#0d0d0f !important; background-image:none !important; }";
+
+  } else {
+    document.body.style.background = "";
+    if (darkBg) darkBg.style.display = "none";
+    const s = document.getElementById("gg-dark-style");
+    if (s) s.remove();
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 </script>
 
@@ -5161,7 +5549,7 @@ function exportTimesheetXLSX() {
   </div>
 
   <!-- Controls bar -->
-  <div style="padding:.75rem 1.5rem;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex-shrink:0;background:#fafafa">
+  <div class="ts-controls-bar" style="padding:.75rem 1.5rem;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex-shrink:0;background:#fafafa">
     <!-- Week navigation -->
     <button onclick="tsNavWeek(-1)" style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(0,0,0,.1);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1a1a1a"><i class="ti ti-chevron-left"></i></button>
     <span id="ts-week-label" style="font-size:13px;font-weight:700;color:#1a1a1a;min-width:160px;text-align:center"></span>
@@ -5343,5 +5731,10 @@ function exportTimesheetXLSX() {
     <span style="font-size:11px;color:#d0d0d0">© 2026</span>
   </div>
 </footer>
+
+<!-- Dark mode toggle -->
+<button class="dark-toggle" id="dark-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">
+  <div class="dark-toggle-thumb" id="dark-toggle-thumb">🌙</div>
+</button>
 </body>
 </html>
