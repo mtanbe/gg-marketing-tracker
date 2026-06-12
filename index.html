@@ -3977,7 +3977,8 @@ function getDriveThumbnail(driveLink) {
   const m3 = driveLink.match(/open[?]id=([a-zA-Z0-9_-]+)/);
   if (!fileId && m3) fileId = m3[1];
   if (!fileId) return null;
-  return "https://drive.google.com/thumbnail?id=" + fileId + "&sz=w800";
+  const _sep = apiUrl.includes("?") ? "&" : "?";
+  return apiUrl + _sep + "action=getImage&fileId=" + encodeURIComponent(fileId);
 }
 
 function loadSocialPosts() {
@@ -4034,11 +4035,12 @@ function loadSocialImage(postId, proxyUrl) {
   window[cbName] = (data) => {
     delete window[cbName];
     if (script.parentNode) script.parentNode.removeChild(script);
-    if (data && data.ok) {
+    if (data && data.ok && data.d) {
       const img = document.getElementById("thumb-img-" + postId);
       if (img) {
-        img.src = data.dataUrl || data.thumbUrl;
+        img.src = data.d;
         img.style.display = "block";
+        img.parentNode.style.display = "flex";
       }
     }
   };
@@ -4127,7 +4129,7 @@ function buildSocialPostCard(p) {
     const isClaudio = currentUser === "Claudia Al Shemali";
     const isAM = ["Michel Tanbe","Karam Merjanian","Shems Abdelkefi"].includes(currentUser);
     actions = `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.06)">
-      ${thumb ? `<div style="margin-bottom:10px;border-radius:12px;overflow:hidden;max-height:200px;background:#f0f0f0;display:flex;align-items:center;justify-content:center"><img src="${thumb}" style="width:100%;max-height:200px;object-fit:contain;display:block" onerror="this.parentNode.style.display='none'"></div>` : ""}
+      ${thumb ? `<div id="thumb-${p.id}" style="margin-bottom:10px;border-radius:12px;overflow:hidden;max-height:200px;background:#f0f0f0;display:none;align-items:center;justify-content:center"><img id="thumb-img-${p.id}" src="" style="width:100%;max-height:200px;object-fit:contain;display:block" onerror="this.parentNode.style.display='none'"></div>` : ""}
       ${(isClaudio || isAM) ? `
       <div style="font-size:11px;font-weight:700;color:#aeaeb2;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Caption — edit if needed then approve</div>
       <textarea id="cap-${p.id}" style="width:100%;padding:8px 12px;border:1.5px solid rgba(0,0,0,.1);border-radius:10px;font-size:12px;font-family:inherit;outline:none;resize:vertical;min-height:70px;box-sizing:border-box;color:#1a1a1a">${p.caption||""}</textarea>
@@ -4145,7 +4147,7 @@ function buildSocialPostCard(p) {
     const isAshraf = currentUser === "Ashraf";
     const isAM2 = ["Michel Tanbe","Karam Merjanian","Shems Abdelkefi"].includes(currentUser);
     actions = `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.06)">
-      ${thumb ? `<div style="margin-bottom:10px;border-radius:12px;overflow:hidden;max-height:200px;background:#f0f0f0;display:flex;align-items:center;justify-content:center"><img src="${thumb}" style="width:100%;max-height:200px;object-fit:contain;display:block" onerror="this.parentNode.style.display='none'"></div>` : ""}
+      ${thumb ? `<div id="thumb-${p.id}" style="margin-bottom:10px;border-radius:12px;overflow:hidden;max-height:200px;background:#f0f0f0;display:none;align-items:center;justify-content:center"><img id="thumb-img-${p.id}" src="" style="width:100%;max-height:200px;object-fit:contain;display:block" onerror="this.parentNode.style.display='none'"></div>` : ""}
       ${(isAshraf || isAM2) ? `<div style="display:flex;gap:8px">
         ${p.driveLink ? `<a href="${p.driveLink}" target="_blank" style="flex:1;padding:8px 12px;border-radius:10px;border:1.5px solid rgba(0,0,0,.1);background:#fff;color:#1a1a1a;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px"><i class="ti ti-photo"></i> View Photo</a>` : ""}
         <button onclick="publishPost('${p.id}')" style="flex:2;padding:8px 14px;border-radius:10px;border:none;background:#5856d6;color:#fff;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
