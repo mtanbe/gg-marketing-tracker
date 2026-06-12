@@ -3962,6 +3962,19 @@ function syncSocialPost(post) {
   apiPost({ action: "saveSocial", p: JSON.stringify(post) });
 }
 
+function syncSocialPostWithThumb(post) {
+  if (post.driveLink && !post.thumbData) {
+    fetchAndStoreThumbnail(post.driveLink, post.id, function(dataUrl) {
+      if (dataUrl) post.thumbData = dataUrl;
+      socialPosts = socialPosts.map(x => x.id === post.id ? post : x);
+      syncSocialPost(post);
+      renderSocialPanel();
+    });
+  } else {
+    syncSocialPost(post);
+  }
+}
+
 function syncDeleteSocialPost(id) {
   if (demoMode) return;
   apiPost({ action: "deleteSocial", id: id });
@@ -4029,6 +4042,32 @@ function closeSocialTracker() {
   document.getElementById("social-overlay").style.display = "none";
 }
 
+function fetchAndStoreThumbnail(driveLink, postId, callback) {
+  // Try to load the image in the browser (works when user is authenticated)
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  let fileId = null;
+  const m1 = driveLink.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m1) fileId = m1[1];
+  if (!fileId) { callback(null); return; }
+  
+  img.onload = function() {
+    // Resize to 400px using canvas
+    const canvas = document.createElement("canvas");
+    const MAX = 400;
+    let w = img.width, h = img.height;
+    if (w > h) { if (w > MAX) { h = h * MAX / w; w = MAX; } }
+    else { if (h > MAX) { w = w * MAX / h; h = MAX; } }
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+    callback(dataUrl);
+  };
+  img.onerror = function() { callback(null); };
+  img.src = "https://drive.google.com/thumbnail?id=" + fileId + "&sz=w400";
+}
+
 function loadSocialImage(postId, proxyUrl) {
   const cbName = "ggimg_" + postId + "_" + Date.now();
   const script = document.createElement("script");
@@ -4092,16 +4131,7 @@ function renderSocialPanel() {
 
   body.innerHTML = html;
   // Load images via proxy after render
-  if (!demoMode) {
-    document.querySelectorAll("[id^='thumb-img-']").forEach(imgEl => {
-      const postId = imgEl.id.replace("thumb-img-", "");
-      const post = socialPosts.find(p => p.id === postId);
-      if (post && post.driveLink) {
-        const thumb = getDriveThumbnail(post.driveLink);
-        if (thumb) loadSocialImage(postId, thumb);
-      }
-    });
-  }
+
 }
 
 function buildSocialPostCard(p) {
@@ -4127,21 +4157,16 @@ function buildSocialPostCard(p) {
   }
 
   if (status === "Awaiting Review") {
-    const thumb = getDriveThumbnail(p.driveLink);
+    const thumb = p.thumbData || null;
     const isClaudio = currentUser === "Claudia Al Shemali";
     const isAM = ["Michel Tanbe","Karam Merjanian","Shems Abdelkefi"].includes(currentUser);
     actions = `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.06)">
-      ${thumb ? `<div id="thumb-wrap-${p.id}" style="margin-bottom:10px;border-radius:12px;overflow:hidden;background:#f0f0f0;display:flex;align-items:center;justify-content:center;min-height:80px">
-        <div id="thumb-loading-${p.id}" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:1rem;color:#aeaeb2;font-size:12px">
-          <i class='ti ti-loader-2' style='font-size:20px;animation:spin 1s linear infinite'></i>
-          <span>Loading photo…</span>
-        </div>
-        <img id="thumb-img-${p.id}" src="" style="width:100%;max-height:200px;object-fit:cover;display:none">
-        <div id="thumb-err-${p.id}" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:1rem;color:#aeaeb2;font-size:12px;width:100%">
-          <i class='ti ti-photo-off' style='font-size:24px'></i>
-          <span>Image unavailable — <a href='${p.driveLink}' target='_blank' style='color:#A51C30;text-decoration:none'>open in Drive</a></span>
-        </div>
-      </div>` : ""}
+      ${thumb ? `<div style="margin-bottom:10px;border-radius:12px;overflow:hidden;max-height:200px;background:#f0f0f0;display:flex;align-items:center;justify-content:center">
+        <img src="${thumb}" style="width:100%;max-height:200px;object-fit:cover;display:block" onerror="this.parentNode.style.display='none'">
+      </div>` : (p.driveLink ? `<div style="margin-bottom:10px;border-radius:12px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;gap:6px;padding:1rem;color:#aeaeb2;font-size:12px">
+        <i class='ti ti-photo-off' style='font-size:20px'></i>
+        <span>Photo processing… <a href='${p.driveLink}' target='_blank' style='color:#A51C30;text-decoration:none'>open in Drive</a></span>
+      </div>` : "")}
       ${(isClaudio || isAM) ? `
       <div style="font-size:11px;font-weight:700;color:#aeaeb2;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Caption — edit if needed then approve</div>
       <textarea id="cap-${p.id}" style="width:100%;padding:8px 12px;border:1.5px solid rgba(0,0,0,.1);border-radius:10px;font-size:12px;font-family:inherit;outline:none;resize:vertical;min-height:70px;box-sizing:border-box;color:#1a1a1a">${p.caption||""}</textarea>
@@ -4155,21 +4180,16 @@ function buildSocialPostCard(p) {
   }
 
   if (status === "Approved") {
-    const thumb = getDriveThumbnail(p.driveLink);
+    const thumb = p.thumbData || null;
     const isAshraf = currentUser === "Ashraf";
     const isAM2 = ["Michel Tanbe","Karam Merjanian","Shems Abdelkefi"].includes(currentUser);
     actions = `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.06)">
-      ${thumb ? `<div id="thumb-wrap-${p.id}" style="margin-bottom:10px;border-radius:12px;overflow:hidden;background:#f0f0f0;display:flex;align-items:center;justify-content:center;min-height:80px">
-        <div id="thumb-loading-${p.id}" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:1rem;color:#aeaeb2;font-size:12px">
-          <i class='ti ti-loader-2' style='font-size:20px;animation:spin 1s linear infinite'></i>
-          <span>Loading photo…</span>
-        </div>
-        <img id="thumb-img-${p.id}" src="" style="width:100%;max-height:200px;object-fit:cover;display:none">
-        <div id="thumb-err-${p.id}" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:1rem;color:#aeaeb2;font-size:12px;width:100%">
-          <i class='ti ti-photo-off' style='font-size:24px'></i>
-          <span>Image unavailable — <a href='${p.driveLink}' target='_blank' style='color:#A51C30;text-decoration:none'>open in Drive</a></span>
-        </div>
-      </div>` : ""}
+      ${thumb ? `<div style="margin-bottom:10px;border-radius:12px;overflow:hidden;max-height:200px;background:#f0f0f0;display:flex;align-items:center;justify-content:center">
+        <img src="${thumb}" style="width:100%;max-height:200px;object-fit:cover;display:block" onerror="this.parentNode.style.display='none'">
+      </div>` : (p.driveLink ? `<div style="margin-bottom:10px;border-radius:12px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;gap:6px;padding:1rem;color:#aeaeb2;font-size:12px">
+        <i class='ti ti-photo-off' style='font-size:20px'></i>
+        <span>Photo processing… <a href='${p.driveLink}' target='_blank' style='color:#A51C30;text-decoration:none'>open in Drive</a></span>
+      </div>` : "")}
       ${(isAshraf || isAM2) ? `<div style="display:flex;gap:8px">
         ${p.driveLink ? `<a href="${p.driveLink}" target="_blank" style="flex:1;padding:8px 12px;border-radius:10px;border:1.5px solid rgba(0,0,0,.1);background:#fff;color:#1a1a1a;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px"><i class="ti ti-photo"></i> View Photo</a>` : ""}
         <button onclick="publishPost('${p.id}')" style="flex:2;padding:8px 14px;border-radius:10px;border:none;background:#5856d6;color:#fff;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
