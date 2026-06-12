@@ -3977,7 +3977,7 @@ function getDriveThumbnail(driveLink) {
   const m3 = driveLink.match(/open[?]id=([a-zA-Z0-9_-]+)/);
   if (!fileId && m3) fileId = m3[1];
   if (!fileId) return null;
-  return "https://lh3.googleusercontent.com/d/" + fileId;
+  return "https://drive.google.com/uc?export=view&id=" + fileId;
 }
 
 function loadSocialPosts() {
@@ -4364,7 +4364,7 @@ function openPrintPanel() {
 
   // Show revenue dashboard for AMs only
   const revSection = document.getElementById("print-revenue-section");
-  const amUsers = ["Michel Tanbe", "Karam Merjanian", "Shems Abdelkefi"];
+  const amUsers = ["Michel Tanbe", "Karam Merjanian", "Shems Abdelkefi", "Ashraf"];
   if (currentUser && amUsers.includes(currentUser)) {
     revSection.style.display = "block";
     renderPrintRevenue();
