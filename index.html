@@ -3960,6 +3960,23 @@ function saveSocialPosts() {
   localStorage.setItem("gg_social", JSON.stringify(socialPosts));
 }
 
+function saveAndLoadThumb(postId, driveLink) {
+  if (demoMode || !driveLink) return;
+  const cbName = "ggsavethumb_" + postId + "_" + Date.now();
+  const script = document.createElement("script");
+  window[cbName] = (data) => {
+    delete window[cbName];
+    if (script.parentNode) script.parentNode.removeChild(script);
+    if (data && data.ok && data.d) {
+      socialThumbs[postId] = data.d;
+      renderSocialPanel();
+    }
+  };
+  const sep = apiUrl.includes("?") ? "&" : "?";
+  script.src = apiUrl + sep + "action=saveThumb&postId=" + encodeURIComponent(postId) + "&driveLink=" + encodeURIComponent(driveLink) + "&callback=" + cbName + "&t=" + Date.now();
+  document.head.appendChild(script);
+}
+
 function loadThumbForPost(postId, onSuccess) {
   if (demoMode) return;
   const cbName = "ggthumb_" + postId + "_" + Date.now();
@@ -4379,14 +4396,8 @@ function saveSocialPost(existingId) {
     syncSocialPost(savedPost);
     // Async: generate and store thumbnail server-side
     if (savedPost.driveLink && !existingId) {
-      apiPost({ action: "saveThumb", postId: savedPost.id, driveLink: savedPost.driveLink });
-      // After a delay, try to load the thumbnail
-      setTimeout(() => {
-        loadThumbForPost(savedPost.id, (dataUrl) => {
-          socialThumbs[savedPost.id] = dataUrl;
-          renderSocialPanel();
-        });
-      }, 4000);
+      // Save thumbnail server-side and display when ready
+      saveAndLoadThumb(savedPost.id, savedPost.driveLink);
     }
   }
   document.getElementById("soc-modal-overlay").remove();
