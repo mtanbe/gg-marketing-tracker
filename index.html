@@ -1566,6 +1566,8 @@ function apiPost(payload) {
       src += "&action=saveSocial&p=" + encodeURIComponent(payload.p);
     } else if (payload.action === "saveThumb") {
       src += "&action=saveThumb&postId=" + encodeURIComponent(payload.postId) + "&driveLink=" + encodeURIComponent(payload.driveLink);
+    } else if (payload.action === "saveThumbData") {
+      src += "&action=saveThumbData&postId=" + encodeURIComponent(payload.postId) + "&thumbData=" + encodeURIComponent(payload.thumbData);
     } else if (payload.action === "savePrint") {
       src += "&action=savePrint&p=" + encodeURIComponent(payload.p);
     } else if (payload.action === "saveTimesheet") {
@@ -3981,6 +3983,31 @@ function generateAllThumbnails() {
   });
 }
 
+function captureAndSaveThumb(postId, imgEl) {
+  // Capture the loaded image as base64 using canvas and save to Sheet
+  try {
+    const canvas = document.createElement("canvas");
+    const MAX = 400;
+    let w = imgEl.naturalWidth || 400;
+    let h = imgEl.naturalHeight || 400;
+    if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(imgEl, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
+    socialThumbs[postId] = dataUrl;
+    // Save to Sheet via Apps Script
+    if (!demoMode) {
+      const cbName = "ggcapture_" + postId + "_" + Date.now();
+      const script = document.createElement("script");
+      window[cbName] = (data) => { delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); };
+      const sep = apiUrl.includes("?") ? "&" : "?";
+      script.src = apiUrl + sep + "action=saveThumbData&postId=" + encodeURIComponent(postId) + "&thumbData=" + encodeURIComponent(dataUrl) + "&callback=" + cbName + "&t=" + Date.now();
+      document.head.appendChild(script);
+    }
+  } catch(e) { /* canvas tainted - skip */ }
+}
+
 function saveAndLoadThumb(postId, driveLink, onDone) {
   if (demoMode || !driveLink) return;
   const cbName = "ggsavethumb_" + postId + "_" + Date.now();
@@ -4046,7 +4073,7 @@ function getDriveThumbnail(driveLink) {
   const m3 = driveLink.match(/open[?]id=([a-zA-Z0-9_-]+)/);
   if (!fileId && m3) fileId = m3[1];
   if (!fileId) return null;
-  return "https://drive.google.com/thumbnail?id=" + fileId + "&sz=w400";
+  return "https://lh3.googleusercontent.com/d/" + fileId;
 }
 
 function loadSocialPosts() {
@@ -4225,7 +4252,11 @@ function buildSocialPostCard(p) {
     const isClaudio = currentUser === "Claudia Al Shemali";
     const isAM = ["Michel Tanbe","Karam Merjanian","Shems Abdelkefi"].includes(currentUser);
     actions = `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.06)">
-      ${thumb ? `<div style="margin-bottom:10px;border-radius:12px;overflow:hidden;max-height:200px;background:#f0f0f0;display:flex;align-items:center;justify-content:center"><img src="${thumb}" style="width:100%;max-height:200px;object-fit:contain;display:block" onerror="this.parentNode.style.display='none'"></div>` : ""}
+      ${thumb ? `<div style="margin-bottom:10px;border-radius:12px;overflow:hidden;max-height:200px;background:#f0f0f0;display:flex;align-items:center;justify-content:center">
+        <img src="${thumb.startsWith('data:') ? thumb : thumb}" style="width:100%;max-height:200px;object-fit:contain;display:block"
+          onload="if(!this.dataset.saved){this.dataset.saved='1';captureAndSaveThumb('${p.id}',this)}"
+          onerror="this.parentNode.style.display='none'">
+      </div>` : ""}
       ${(isClaudio || isAM) ? `
       <div style="font-size:11px;font-weight:700;color:#aeaeb2;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Caption — edit if needed then approve</div>
       <textarea id="cap-${p.id}" style="width:100%;padding:8px 12px;border:1.5px solid rgba(0,0,0,.1);border-radius:10px;font-size:12px;font-family:inherit;outline:none;resize:vertical;min-height:70px;box-sizing:border-box;color:#1a1a1a">${p.caption||""}</textarea>
@@ -4243,7 +4274,11 @@ function buildSocialPostCard(p) {
     const isAshraf = currentUser === "Ashraf";
     const isAM2 = ["Michel Tanbe","Karam Merjanian","Shems Abdelkefi"].includes(currentUser);
     actions = `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.06)">
-      ${thumb ? `<div style="margin-bottom:10px;border-radius:12px;overflow:hidden;max-height:200px;background:#f0f0f0;display:flex;align-items:center;justify-content:center"><img src="${thumb}" style="width:100%;max-height:200px;object-fit:contain;display:block" onerror="this.parentNode.style.display='none'"></div>` : ""}
+      ${thumb ? `<div style="margin-bottom:10px;border-radius:12px;overflow:hidden;max-height:200px;background:#f0f0f0;display:flex;align-items:center;justify-content:center">
+        <img src="${thumb.startsWith('data:') ? thumb : thumb}" style="width:100%;max-height:200px;object-fit:contain;display:block"
+          onload="if(!this.dataset.saved){this.dataset.saved='1';captureAndSaveThumb('${p.id}',this)}"
+          onerror="this.parentNode.style.display='none'">
+      </div>` : ""}
       ${(isAshraf || isAM2) ? `<div style="display:flex;gap:8px">
         ${p.driveLink ? `<a href="${p.driveLink}" target="_blank" style="flex:1;padding:8px 12px;border-radius:10px;border:1.5px solid rgba(0,0,0,.1);background:#fff;color:#1a1a1a;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px"><i class="ti ti-photo"></i> View Photo</a>` : ""}
         <button onclick="publishPost('${p.id}')" style="flex:2;padding:8px 14px;border-radius:10px;border:none;background:#5856d6;color:#fff;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
